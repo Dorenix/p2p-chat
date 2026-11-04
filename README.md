@@ -7,11 +7,11 @@ No accounts, no sign-up, no server in the middle: audio and messages go directly
 
 ## How to use
 
-1. Open an **invite link** someone sent you. The room is added automatically.
-2. Type your name and press **Join**. Allow the microphone when the browser asks.
-3. That's it. You can listen and write even without a microphone.
+1. Open an **invite link** someone sent you. Type your name once, and you join the room straight away. Allow the microphone when the browser asks.
+2. Your rooms and friends are listed on the left. Click a room to join its voice chat; the bar at the bottom always shows where you are talking.
+3. You can listen and write even without a microphone.
 
-**Start your own room:** press **+ New room**, give it a name, save, then press **Invite** at the top of the room and send the link privately.
+**Start your own room:** press **+ new** on the left, give it a name, save, then press **Invite** at the top of the room and send the link privately.
 
 Works in Firefox, Chrome, Edge and Brave, on desktop and on phones. The interface is available in English and Polish.
 
@@ -20,8 +20,8 @@ Works in Firefox, Chrome, Edge and Brave, on desktop and on phones. The interfac
 - Voice and text chat for up to 10 people
 - AI noise filter (RNNoise) for keyboard, fans and background noise, plus a noise gate
 - Per-person volume, master volume, and muting people just for yourself
-- Friends: add people from their card, optionally comparing a safety code, and send them room invites directly
-- Private messages, IRC-style commands (type `/help`), mentions and optional sounds
+- Friends: add people from their card, then chat with them privately at any time and call them; messages to an offline friend are delivered when you are both online
+- IRC-style commands (type `/help`), mentions, and optional soft mechanical sounds
 - Room lock: only your friends can talk with you
 - Simple mode for people who just want to talk
 - Green, amber and cyan terminal themes
@@ -41,7 +41,7 @@ Works in Firefox, Chrome, Edge and Brave, on desktop and on phones. The interfac
 - **Someone shows as "not connected to you"**: others reach them but your connection failed. This is usually the network (strict routers, mobile carriers, company Wi-Fi). Type `/diag` on both devices and compare.
 - **No sound**: check that the person's level bar moves, that the browser tab is not muted, and the volume sliders. Open a person's card to see whether audio arrives (`↓ ↑ kbit/s`).
 - **Microphone not working**: click the microphone or lock icon in the address bar and allow it, then use *Retry microphone* in Settings.
-- **Everyone must use the same version.** The version is shown on the join screen.
+- **Everyone must use the same version.** Type `/diag` to see your version. After an update, everyone reloads the page.
 
 ## Self-hosting
 
