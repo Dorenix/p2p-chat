@@ -107,7 +107,14 @@ label{display:grid;gap:4px;font-size:12px;color:var(--dim);text-transform:upperc
 #chathead{padding:10px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);background:var(--panel)}
 #chathead h1{margin:0;font-size:15px;font-weight:400;color:var(--hi);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #chathead h1::before{content:"p2p://";color:var(--dim)}
-#log{flex:1;overflow-y:auto;padding:12px 18px;display:flex;flex-direction:column;gap:2px}
+#log,#dmlog{flex:1;overflow-y:auto;padding:12px 18px;display:flex;flex-direction:column;gap:2px}
+#convs{display:flex;gap:4px;padding:6px 18px 0;border-bottom:1px solid var(--line);overflow-x:auto;background:var(--panel)}
+.conv{border:1px solid var(--line);border-bottom:0;padding:5px 10px;font-size:12px;color:var(--dim);display:flex;align-items:center;gap:6px;white-space:nowrap;text-transform:none;letter-spacing:0}
+.conv.on{color:var(--fg);border-color:var(--fg);background:var(--bg)}
+.conv.unread{color:var(--warn)}
+.conv .x{margin-left:4px;opacity:.6}.conv .x:hover{opacity:1}
+.conv .dot{width:7px;height:7px;border-radius:50%;background:var(--faint)}.conv .dot.on{background:var(--fg)}
+.dmst{color:var(--dim);font-size:11px}
 .line{white-space:pre-wrap;word-wrap:break-word}
 button{white-space:nowrap}
 .gtime{color:var(--faint)}
@@ -205,7 +212,9 @@ body.simple .adv{display:none !important}
   </div>
   <div id="main">
     <div id="chathead"><h1 id="title"></h1><button class="small" id="inviteBtn" data-t="invite"></button><button class="small adv" id="lockBtn"></button><span class="note" id="status"></span></div>
+    <div id="convs" style="display:none"></div>
     <div id="log"></div>
+    <div id="dmlog" style="display:none"></div>
     <form id="send">
       <input id="text" data-tp="msgPh" autocomplete="off">
       <button class="primary" data-t="send"></button>
@@ -325,7 +334,7 @@ const RELAYS = ['wss://relay.damus.io','wss://nos.lol','wss://relay.nostr.band',
 const APP_URL = '';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '7.0';
+const APP_VERSION = '7.1';
 const MAX_PEERS = 9; // plus self = 10
 
 // Settings
@@ -397,7 +406,7 @@ const LANG = {
     turnUserPh:'username', turnPassPh:'password',
     aloneHelp:'Nobody found yet. Invite others with the Invite button at the top. If they are here already, check:\n1. everyone uses the same version (v{0}, shown on the join screen)\n2. type /diag here and on the other computer and compare the results',
     aloneSimple:'Nobody has joined yet. Press Invite at the top and send the link to the people you want to talk to.',
-    path_p2p:'P2P', path_lan:'LAN', path_relay:'RELAY', pathDesc_p2p:'Direct connection over the internet', pathDesc_lan:'Direct connection inside your local network', pathDesc_relay:'Relayed through the TURN server, still end-to-end encrypted', netV6yes:'IPv6 available, direct connections to other IPv6 devices should work', netV6local:'IPv6 only local, no internet IPv6', netV6no:'no IPv6 on this network', netSvcBad:'TURN service failed: {0}', netNoTurn:'no TURN configured', bootTurn:'turn credentials ...', svcTitle:'TURN service (Cloudflare Worker)', svcDesc:'Address of the Worker that hands out TURN credentials. Leave empty to use the one built into this file.', turnIsOff:'switched off by the owner', turnNoSvc:'no TURN service address set', turnNoAdmin:'no admin key set in Settings > Network', turnBadAdmin:'wrong admin key', turnStOff:'off', turnStOn:'on', turnStOnUntil:'on until {0}', turnRevoked:'{0} credentials revoked', turnRejoin:'Rejoin the room so your connections can use it.', adminTitle:'Admin key (owner only)', adminDesc:'Only on the computer of the person who owns the TURN server. Lets you switch it with /turn on, /turn on 3 (hours) and /turn off. Never share it.', adminPh:'admin key', useRunning:'checking TURN usage…', useMine:'this device, this session: {0} relayed', useMonth:'account, {0}: {1} sent, {2} received', use24:'last 24 h: {0}', useFree:'{0}% of the free 1,000 GB used (counted on sent data, analytics lag a few minutes)', useBtn:'Show TURN usage', moreNet:'Advanced: TURN server', moreAcct:'Backup and reset', volShort:'Vol', akaShort:'Was', cardAccount:'ID', cardConn:'Link', cardCode:'Code', cardNick:'Nickname', demo:'Try demo', ambiguous:'more than one person has that name, use one of: {0}', pmBtn:'private message', pmShort:'Msg', inRoom:'In room', friends:'Friends', noFriends:'Nobody yet. Add people as friends from their card in the room.', hereNow:'here now', lastSeen:'seen {0}', agoNow:'just now', agoMin:'{0} min ago', agoHour:'{0} h ago', agoDay:'{0} days ago', nameShort:'Name', unfriend:'remove friend', masterVol:'Master volume', changeName:'change', dupAcct:'same account twice (two tabs?)', otherTabQ:'This app is already in a call in another tab of this browser. Tabs of one browser share the same account, which confuses the others.\n\nOK: join with a temporary account in this tab (for testing, nothing is saved)\nCancel: go back and use the other tab', tempAcct:'temporary account for this tab, nothing is saved', connIssue:'connection issue with {0}: {1}', silence:'mute for me', unsilence:'unmute', hearShort:'Hear', silenced:'muted by you', silencedMsg:'{0} is muted for you', unsilencedMsg:'{0} is no longer muted for you', soundBlocked:'Sound is blocked by the browser. Click here to enable it.', noAudioIn:'no audio arriving', netAudio:'audio engine: {0}, {1} Hz', audioRetry:'audio to {0} did not start, retrying ({1}/3)', notConnected:'not connected to you (seen by {0})', connectingTo:'connecting…', notConnectedDesc:'Others in the room are connected to this person, but your connection to them has not been established. It keeps trying automatically.', notConnCount:'{0} not connected', waitMicShort:'waiting for microphone…', micSlow:'The browser is still waiting for microphone permission. Click the microphone or lock icon in the address bar and allow it. You can already listen and chat.', notifyOpt:'Desktop notifications', notifyDesc:'Show a system notification when someone mentions you or sends a private message while this tab is in the background.', notifyDenied:'The browser blocked notifications. Allow them via the lock icon in the address bar.', netMdns:'local addresses are hidden (mDNS) until the microphone is allowed; LAN connections may fail if the network blocks multicast', diagSignal:'handshake error ({0}): {1}', diagIce:'connection attempt failed \u00b7 mine: {0} \u00b7 theirs: {1} \u00b7 pairs: {2}', diagRecent:'recent connection problems:', none:'none', pasteInvite:'Paste invite', invite:'Invite', copyInviteLink:'Copy invite link', noRooms:'No rooms yet. Open an invite link, paste an invite, or create a new room.', pasteQ:'Paste the invite link or code:', inviteBad:'That is not a valid invite.', inviteAdded:'Room "{0}" added. Type your name and press Join.', inviteCopied:'Invite link copied. Send it privately: anyone with the link can join this room.', inviteCodeCopied:'Invite code copied. The other person pastes it with "Paste invite" on the join screen. Send it privately.', demoRoom:'Demo room', chooseRoomQ:'Which room do you want to send?', invBtn:'send room invite', invSent:'Invite to "{0}" sent to {1}.', invRecv:'{0} invites you to the room "{1}".', invAdd:'add room', invHave:'already added', invAdded:'Room "{0}" added to your room list. Leave this room to join it.', done:'Done', mainRoom:'Main room', builtIn:'(built in)', edit:'Edit', del:'Delete', delConfirm:'Delete room "{0}"?',
+    path_p2p:'P2P', path_lan:'LAN', path_relay:'RELAY', pathDesc_p2p:'Direct connection over the internet', pathDesc_lan:'Direct connection inside your local network', pathDesc_relay:'Relayed through the TURN server, still end-to-end encrypted', netV6yes:'IPv6 available, direct connections to other IPv6 devices should work', netV6local:'IPv6 only local, no internet IPv6', netV6no:'no IPv6 on this network', netSvcBad:'TURN service failed: {0}', netNoTurn:'no TURN configured', bootTurn:'turn credentials ...', svcTitle:'TURN service (Cloudflare Worker)', svcDesc:'Address of the Worker that hands out TURN credentials. Leave empty to use the one built into this file.', turnIsOff:'switched off by the owner', turnNoSvc:'no TURN service address set', turnNoAdmin:'no admin key set in Settings > Network', turnBadAdmin:'wrong admin key', turnStOff:'off', turnStOn:'on', turnStOnUntil:'on until {0}', turnRevoked:'{0} credentials revoked', turnRejoin:'Rejoin the room so your connections can use it.', adminTitle:'Admin key (owner only)', adminDesc:'Only on the computer of the person who owns the TURN server. Lets you switch it with /turn on, /turn on 3 (hours) and /turn off. Never share it.', adminPh:'admin key', useRunning:'checking TURN usage…', useMine:'this device, this session: {0} relayed', useMonth:'account, {0}: {1} sent, {2} received', use24:'last 24 h: {0}', useFree:'{0}% of the free 1,000 GB used (counted on sent data, analytics lag a few minutes)', useBtn:'Show TURN usage', moreNet:'Advanced: TURN server', moreAcct:'Backup and reset', volShort:'Vol', akaShort:'Was', cardAccount:'ID', cardConn:'Link', cardCode:'Code', cardNick:'Nickname', demo:'Try demo', ambiguous:'more than one person has that name, use one of: {0}', pmBtn:'private message', pmShort:'Msg', inRoom:'In room', friends:'Friends', noFriends:'Nobody yet. Add people as friends from their card in the room.', hereNow:'here now', lastSeen:'seen {0}', agoNow:'just now', agoMin:'{0} min ago', agoHour:'{0} h ago', agoDay:'{0} days ago', nameShort:'Name', unfriend:'remove friend', masterVol:'Master volume', changeName:'change', dupAcct:'same account twice (two tabs?)', otherTabQ:'This app is already in a call in another tab of this browser. Tabs of one browser share the same account, which confuses the others.\n\nOK: join with a temporary account in this tab (for testing, nothing is saved)\nCancel: go back and use the other tab', tempAcct:'temporary account for this tab, nothing is saved', connIssue:'connection issue with {0}: {1}', silence:'mute for me', unsilence:'unmute', hearShort:'Hear', silenced:'muted by you', silencedMsg:'{0} is muted for you', unsilencedMsg:'{0} is no longer muted for you', soundBlocked:'Sound is blocked by the browser. Click here to enable it.', noAudioIn:'no audio arriving', netAudio:'audio engine: {0}, {1} Hz', audioRetry:'audio to {0} did not start, retrying ({1}/3)', notConnected:'not connected to you (seen by {0})', connectingTo:'connecting…', notConnectedDesc:'Others in the room are connected to this person, but your connection to them has not been established. It keeps trying automatically.', notConnCount:'{0} not connected', waitMicShort:'waiting for microphone…', micSlow:'The browser is still waiting for microphone permission. Click the microphone or lock icon in the address bar and allow it. You can already listen and chat.', notifyOpt:'Desktop notifications', notifyDesc:'Show a system notification when someone mentions you or sends a private message while this tab is in the background.', notifyDenied:'The browser blocked notifications. Allow them via the lock icon in the address bar.', netMdns:'local addresses are hidden (mDNS) until the microphone is allowed; LAN connections may fail if the network blocks multicast', diagSignal:'handshake error ({0}): {1}', diagIce:'connection attempt failed \u00b7 mine: {0} \u00b7 theirs: {1} \u00b7 pairs: {2}', diagRecent:'recent connection problems:', none:'none', pasteInvite:'Paste invite', invite:'Invite', copyInviteLink:'Copy invite link', noRooms:'No rooms yet. Open an invite link, paste an invite, or create a new room.', pasteQ:'Paste the invite link or code:', inviteBad:'That is not a valid invite.', inviteAdded:'Room "{0}" added. Type your name and press Join.', inviteCopied:'Invite link copied. Send it privately: anyone with the link can join this room.', inviteCodeCopied:'Invite code copied. The other person pastes it with "Paste invite" on the join screen. Send it privately.', demoRoom:'Demo room', chooseRoomQ:'Which room do you want to send?', invBtn:'send room invite', invSent:'Invite to "{0}" sent to {1}.', invRecv:'{0} invites you to the room "{1}".', invAdd:'add room', invHave:'already added', invAdded:'Room "{0}" added to your room list. Leave this room to join it.', dmBtn:'message', onlineNow:'online', dmOnline:'{0} is online. Private chat, end-to-end encrypted.', dmOffline:'{0} is offline. Messages wait on this device and are delivered when you are both online.', dmDelivered:'delivered', dmWaiting:'waiting for delivery', close:'close', dmNoKey:'Meet once in a room after updating, then private chat works', done:'Done', mainRoom:'Main room', builtIn:'(built in)', edit:'Edit', del:'Delete', delConfirm:'Delete room "{0}"?',
     needRoomPw:'Room name and password are required', error:'Error', active:'{0} active',
     nnFail:'{0} could not start here ({1}). In Edge or Chrome it needs the page hosted online, not opened as a file.',
     default:'Default', you:'(you)', muted:'Muted', inVoice:'In voice', talking:'Talking', sending:'Sending', quiet:'Quiet', volume:'Volume',
@@ -458,7 +467,7 @@ const LANG = {
     turnUserPh:'nazwa użytkownika', turnPassPh:'hasło',
     aloneHelp:'Nikogo jeszcze nie znaleziono. Zaproś innych przyciskiem Zaproś u góry. Jeśli już tu są, sprawdź:\n1. czy wszyscy mają tę samą wersję (v{0}, widoczna na ekranie dołączania)\n2. wpisz /diag tutaj i na drugim komputerze i porównaj wyniki',
     aloneSimple:'Nikt jeszcze nie dołączył. Kliknij Zaproś u góry i wyślij link osobom, z którymi chcesz rozmawiać.',
-    path_p2p:'P2P', path_lan:'LAN', path_relay:'PRZEKAŹNIK', pathDesc_p2p:'Bezpośrednie połączenie przez internet', pathDesc_lan:'Bezpośrednie połączenie w sieci lokalnej', pathDesc_relay:'Przez serwer TURN, nadal szyfrowane end-to-end', netV6yes:'IPv6 dostępne, połączenia bezpośrednie z innymi urządzeniami IPv6 powinny działać', netV6local:'IPv6 tylko lokalnie, brak IPv6 w internecie', netV6no:'brak IPv6 w tej sieci', netSvcBad:'usługa TURN nie działa: {0}', netNoTurn:'brak skonfigurowanego TURN', bootTurn:'dane TURN ...', svcTitle:'Usługa TURN (Cloudflare Worker)', svcDesc:'Adres Workera, który wydaje dane logowania TURN. Zostaw puste, aby użyć adresu wbudowanego w ten plik.', turnIsOff:'wyłączony przez właściciela', turnNoSvc:'nie ustawiono adresu usługi TURN', turnNoAdmin:'brak klucza administratora w Ustawienia > Sieć', turnBadAdmin:'zły klucz administratora', turnStOff:'wyłączony', turnStOn:'włączony', turnStOnUntil:'włączony do {0}', turnRevoked:'unieważniono dane: {0}', turnRejoin:'Dołącz ponownie do pokoju, aby połączenia mogły z niego korzystać.', adminTitle:'Klucz administratora (tylko właściciel)', adminDesc:'Tylko na komputerze właściciela serwera TURN. Pozwala przełączać go poleceniami /turn on, /turn on 3 (godziny) i /turn off. Nigdy go nie udostępniaj.', adminPh:'klucz administratora', useRunning:'sprawdzanie zużycia TURN…', useMine:'to urządzenie, ta sesja: {0} przez przekaźnik', useMonth:'konto, {0}: wysłano {1}, odebrano {2}', use24:'ostatnie 24 h: {0}', useFree:'wykorzystano {0}% darmowych 1000 GB (liczone od wysłanych danych, statystyki mają kilka minut opóźnienia)', useBtn:'Pokaż zużycie TURN', moreNet:'Zaawansowane: serwer TURN', moreAcct:'Kopia zapasowa i reset', volShort:'Głośn.', akaShort:'Dawniej', cardAccount:'ID', cardConn:'Łącze', cardCode:'Kod', cardNick:'Pseudonim', demo:'Wypróbuj demo', ambiguous:'kilka osób ma tę nazwę, użyj jednej z: {0}', pmBtn:'wiadomość prywatna', pmShort:'Wiad.', inRoom:'W pokoju', friends:'Znajomi', noFriends:'Jeszcze nikogo. Dodaj osoby do znajomych z ich karty w pokoju.', hereNow:'jest tutaj', lastSeen:'widziany(-a) {0}', agoNow:'przed chwilą', agoMin:'{0} min temu', agoHour:'{0} godz. temu', agoDay:'{0} dni temu', nameShort:'Nazwa', unfriend:'usuń ze znajomych', masterVol:'Głośność ogólna', changeName:'zmień', dupAcct:'to samo konto dwa razy (dwie karty?)', otherTabQ:'Aplikacja jest już w rozmowie w innej karcie tej przeglądarki. Karty jednej przeglądarki mają to samo konto, co myli innych.\n\nOK: dołącz z tymczasowym kontem w tej karcie (do testów, nic nie jest zapisywane)\nAnuluj: wróć i użyj drugiej karty', tempAcct:'tymczasowe konto dla tej karty, nic nie jest zapisywane', connIssue:'problem z połączeniem z {0}: {1}', silence:'wycisz u mnie', unsilence:'przywróć', hearShort:'Słuch', silenced:'wyciszony(-a) przez Ciebie', silencedMsg:'{0} jest u Ciebie wyciszony(-a)', unsilencedMsg:'{0} nie jest już u Ciebie wyciszony(-a)', soundBlocked:'Przeglądarka blokuje dźwięk. Kliknij tutaj, aby go włączyć.', noAudioIn:'nie dociera dźwięk', netAudio:'silnik audio: {0}, {1} Hz', audioRetry:'dźwięk do {0} nie ruszył, ponawiam ({1}/3)', notConnected:'brak połączenia z Tobą (widzi: {0})', connectingTo:'łączenie…', notConnectedDesc:'Inni w pokoju są połączeni z tą osobą, ale Twoje połączenie z nią jeszcze nie powstało. Próby trwają automatycznie.', notConnCount:'bez połączenia: {0}', waitMicShort:'czekam na mikrofon…', micSlow:'Przeglądarka wciąż czeka na zgodę na mikrofon. Kliknij ikonę mikrofonu lub kłódki w pasku adresu i zezwól. Możesz już słuchać i pisać.', notifyOpt:'Powiadomienia systemowe', notifyDesc:'Pokazuj powiadomienie systemowe, gdy ktoś Cię wspomni lub wyśle wiadomość prywatną, a ta karta jest w tle.', notifyDenied:'Przeglądarka zablokowała powiadomienia. Zezwól na nie przez ikonę kłódki w pasku adresu.', netMdns:'adresy lokalne są ukryte (mDNS), dopóki mikrofon nie jest dozwolony; połączenia w sieci lokalnej mogą zawodzić, jeśli sieć blokuje multicast', diagSignal:'błąd uzgadniania ({0}): {1}', diagIce:'próba połączenia nieudana \u00b7 moje: {0} \u00b7 ich: {1} \u00b7 pary: {2}', diagRecent:'ostatnie problemy z połączeniem:', none:'brak', pasteInvite:'Wklej zaproszenie', invite:'Zaproś', copyInviteLink:'Kopiuj link z zaproszeniem', noRooms:'Brak pokoi. Otwórz link z zaproszeniem, wklej zaproszenie lub utwórz nowy pokój.', pasteQ:'Wklej link lub kod zaproszenia:', inviteBad:'To nie jest prawidłowe zaproszenie.', inviteAdded:'Dodano pokój „{0}”. Wpisz swoje imię i kliknij Dołącz.', inviteCopied:'Skopiowano link z zaproszeniem. Wyślij go prywatnie: każdy z tym linkiem może wejść do pokoju.', inviteCodeCopied:'Skopiowano kod zaproszenia. Druga osoba wkleja go przyciskiem „Wklej zaproszenie” na ekranie dołączania. Wyślij go prywatnie.', demoRoom:'Pokój demo', chooseRoomQ:'Który pokój chcesz wysłać?', invBtn:'wyślij zaproszenie', invSent:'Wysłano zaproszenie do „{0}” dla {1}.', invRecv:'{0} zaprasza Cię do pokoju „{1}”.', invAdd:'dodaj pokój', invHave:'już dodany', invAdded:'Dodano pokój „{0}” do listy. Wyjdź z tego pokoju, aby do niego dołączyć.', done:'Gotowe', mainRoom:'Pokój główny', builtIn:'(wbudowany)', edit:'Edytuj', del:'Usuń', delConfirm:'Usunąć pokój „{0}”?',
+    path_p2p:'P2P', path_lan:'LAN', path_relay:'PRZEKAŹNIK', pathDesc_p2p:'Bezpośrednie połączenie przez internet', pathDesc_lan:'Bezpośrednie połączenie w sieci lokalnej', pathDesc_relay:'Przez serwer TURN, nadal szyfrowane end-to-end', netV6yes:'IPv6 dostępne, połączenia bezpośrednie z innymi urządzeniami IPv6 powinny działać', netV6local:'IPv6 tylko lokalnie, brak IPv6 w internecie', netV6no:'brak IPv6 w tej sieci', netSvcBad:'usługa TURN nie działa: {0}', netNoTurn:'brak skonfigurowanego TURN', bootTurn:'dane TURN ...', svcTitle:'Usługa TURN (Cloudflare Worker)', svcDesc:'Adres Workera, który wydaje dane logowania TURN. Zostaw puste, aby użyć adresu wbudowanego w ten plik.', turnIsOff:'wyłączony przez właściciela', turnNoSvc:'nie ustawiono adresu usługi TURN', turnNoAdmin:'brak klucza administratora w Ustawienia > Sieć', turnBadAdmin:'zły klucz administratora', turnStOff:'wyłączony', turnStOn:'włączony', turnStOnUntil:'włączony do {0}', turnRevoked:'unieważniono dane: {0}', turnRejoin:'Dołącz ponownie do pokoju, aby połączenia mogły z niego korzystać.', adminTitle:'Klucz administratora (tylko właściciel)', adminDesc:'Tylko na komputerze właściciela serwera TURN. Pozwala przełączać go poleceniami /turn on, /turn on 3 (godziny) i /turn off. Nigdy go nie udostępniaj.', adminPh:'klucz administratora', useRunning:'sprawdzanie zużycia TURN…', useMine:'to urządzenie, ta sesja: {0} przez przekaźnik', useMonth:'konto, {0}: wysłano {1}, odebrano {2}', use24:'ostatnie 24 h: {0}', useFree:'wykorzystano {0}% darmowych 1000 GB (liczone od wysłanych danych, statystyki mają kilka minut opóźnienia)', useBtn:'Pokaż zużycie TURN', moreNet:'Zaawansowane: serwer TURN', moreAcct:'Kopia zapasowa i reset', volShort:'Głośn.', akaShort:'Dawniej', cardAccount:'ID', cardConn:'Łącze', cardCode:'Kod', cardNick:'Pseudonim', demo:'Wypróbuj demo', ambiguous:'kilka osób ma tę nazwę, użyj jednej z: {0}', pmBtn:'wiadomość prywatna', pmShort:'Wiad.', inRoom:'W pokoju', friends:'Znajomi', noFriends:'Jeszcze nikogo. Dodaj osoby do znajomych z ich karty w pokoju.', hereNow:'jest tutaj', lastSeen:'widziany(-a) {0}', agoNow:'przed chwilą', agoMin:'{0} min temu', agoHour:'{0} godz. temu', agoDay:'{0} dni temu', nameShort:'Nazwa', unfriend:'usuń ze znajomych', masterVol:'Głośność ogólna', changeName:'zmień', dupAcct:'to samo konto dwa razy (dwie karty?)', otherTabQ:'Aplikacja jest już w rozmowie w innej karcie tej przeglądarki. Karty jednej przeglądarki mają to samo konto, co myli innych.\n\nOK: dołącz z tymczasowym kontem w tej karcie (do testów, nic nie jest zapisywane)\nAnuluj: wróć i użyj drugiej karty', tempAcct:'tymczasowe konto dla tej karty, nic nie jest zapisywane', connIssue:'problem z połączeniem z {0}: {1}', silence:'wycisz u mnie', unsilence:'przywróć', hearShort:'Słuch', silenced:'wyciszony(-a) przez Ciebie', silencedMsg:'{0} jest u Ciebie wyciszony(-a)', unsilencedMsg:'{0} nie jest już u Ciebie wyciszony(-a)', soundBlocked:'Przeglądarka blokuje dźwięk. Kliknij tutaj, aby go włączyć.', noAudioIn:'nie dociera dźwięk', netAudio:'silnik audio: {0}, {1} Hz', audioRetry:'dźwięk do {0} nie ruszył, ponawiam ({1}/3)', notConnected:'brak połączenia z Tobą (widzi: {0})', connectingTo:'łączenie…', notConnectedDesc:'Inni w pokoju są połączeni z tą osobą, ale Twoje połączenie z nią jeszcze nie powstało. Próby trwają automatycznie.', notConnCount:'bez połączenia: {0}', waitMicShort:'czekam na mikrofon…', micSlow:'Przeglądarka wciąż czeka na zgodę na mikrofon. Kliknij ikonę mikrofonu lub kłódki w pasku adresu i zezwól. Możesz już słuchać i pisać.', notifyOpt:'Powiadomienia systemowe', notifyDesc:'Pokazuj powiadomienie systemowe, gdy ktoś Cię wspomni lub wyśle wiadomość prywatną, a ta karta jest w tle.', notifyDenied:'Przeglądarka zablokowała powiadomienia. Zezwól na nie przez ikonę kłódki w pasku adresu.', netMdns:'adresy lokalne są ukryte (mDNS), dopóki mikrofon nie jest dozwolony; połączenia w sieci lokalnej mogą zawodzić, jeśli sieć blokuje multicast', diagSignal:'błąd uzgadniania ({0}): {1}', diagIce:'próba połączenia nieudana \u00b7 moje: {0} \u00b7 ich: {1} \u00b7 pary: {2}', diagRecent:'ostatnie problemy z połączeniem:', none:'brak', pasteInvite:'Wklej zaproszenie', invite:'Zaproś', copyInviteLink:'Kopiuj link z zaproszeniem', noRooms:'Brak pokoi. Otwórz link z zaproszeniem, wklej zaproszenie lub utwórz nowy pokój.', pasteQ:'Wklej link lub kod zaproszenia:', inviteBad:'To nie jest prawidłowe zaproszenie.', inviteAdded:'Dodano pokój „{0}”. Wpisz swoje imię i kliknij Dołącz.', inviteCopied:'Skopiowano link z zaproszeniem. Wyślij go prywatnie: każdy z tym linkiem może wejść do pokoju.', inviteCodeCopied:'Skopiowano kod zaproszenia. Druga osoba wkleja go przyciskiem „Wklej zaproszenie” na ekranie dołączania. Wyślij go prywatnie.', demoRoom:'Pokój demo', chooseRoomQ:'Który pokój chcesz wysłać?', invBtn:'wyślij zaproszenie', invSent:'Wysłano zaproszenie do „{0}” dla {1}.', invRecv:'{0} zaprasza Cię do pokoju „{1}”.', invAdd:'dodaj pokój', invHave:'już dodany', invAdded:'Dodano pokój „{0}” do listy. Wyjdź z tego pokoju, aby do niego dołączyć.', dmBtn:'wiadomość', onlineNow:'online', dmOnline:'{0} jest online. Prywatny czat, szyfrowany end-to-end.', dmOffline:'{0} jest offline. Wiadomości czekają na tym urządzeniu i zostaną dostarczone, gdy oboje będziecie online.', dmDelivered:'dostarczono', dmWaiting:'czeka na dostarczenie', close:'zamknij', dmNoKey:'Spotkajcie się raz w pokoju po aktualizacji, wtedy czat prywatny zadziała', done:'Gotowe', mainRoom:'Pokój główny', builtIn:'(wbudowany)', edit:'Edytuj', del:'Usuń', delConfirm:'Usunąć pokój „{0}”?',
     needRoomPw:'Identyfikator pokoju i hasło są wymagane', error:'Błąd', active:'{0} aktywny',
     nnFail:'Nie udało się tu uruchomić {0} ({1}). W Edge lub Chrome strona musi być w internecie, a nie otwarta jako plik.',
     default:'Domyślny', you:'(ty)', muted:'Wyciszony', inVoice:'Na kanale', talking:'Mówi', sending:'Nadaje', quiet:'Cisza', volume:'Głośność',
@@ -947,6 +956,126 @@ function inviteLine(p, inv){
 const idOf = p => [...peers].find(([, x]) => x === p)?.[0];
 
 // Participant list: a compact row per person; clicking it opens a card with everything about that account
+// Private chats with friends. Both apps derive the same secret room from the two account keys (ECDH),
+// so only the two of you can find it. The app stays connected to all friends' rooms in the background
+// while it is open. Messages to an offline friend wait here and are delivered when you are both online.
+const dms = new Map();      // friend account -> {room, send, peerIds:Set, online}
+let activeConv = 'room';    // 'room' or a friend's account id
+const DM_LIMIT = 300;
+const dmData = id => (S.dm ||= {})[id] ||= {msgs:[], unread:0, outbox:[]};
+const friendName = id => S.contacts[id]?.nick || S.contacts[id]?.name || '?';
+
+async function dmSecret(c){
+  const priv = {...acct.jwk}; delete priv.key_ops; delete priv.alg;
+  const mine = await crypto.subtle.importKey('jwk', priv, {name:'ECDH', namedCurve:'P-256'}, false, ['deriveBits']);
+  const theirs = await crypto.subtle.importKey('jwk', {kty:'EC', crv:'P-256', x:c.x, y:c.y, ext:true}, {name:'ECDH', namedCurve:'P-256'}, false, []);
+  const bits = await crypto.subtle.deriveBits({name:'ECDH', public:theirs}, mine, 256);
+  return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function startDM(id){
+  const c = S.contacts[id];
+  if (!acct || !c?.verified || !c.x || !c.y || dms.has(id) || tempTab) return;
+  const entry = {peerIds:new Set(), online:false}; dms.set(id, entry);
+  try {
+    const sec = await dmSecret(c);
+    const roomName = 'dm-' + (await sha256hex('dm-room|' + sec)).slice(0, 24);
+    const pass = await sha256hex('dm-pass|' + sec);
+    const keyRaw = await crypto.subtle.digest('SHA-256', enc.encode('dm-layer|' + sec));
+    const key = await crypto.subtle.importKey('raw', keyRaw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+    if (!dms.has(id)) return;
+    const rm = joinRoom({appId:'p2p-voice-chat-v4', password:pass, relayUrls:RELAYS, relayRedundancy:RELAYS.length}, roomName);
+    entry.room = rm;
+    const [send, get] = secureAction('dm', rm, key);
+    entry.send = send;
+    rm.onPeerJoin(pid => { send({hi:acct.id}, pid).catch(() => {}); });
+    rm.onPeerLeave(pid => { entry.peerIds.delete(pid); entry.online = entry.peerIds.size > 0; if (!entry.online) contact(id).seen = Date.now(); dmChanged(id); });
+    get((d, pid) => {
+      if (d?.hi){                       // greeting: only the friend's own account belongs here
+        if (d.hi === acct.id) return;   // another tab of mine
+        if (d.hi !== id) return;
+        entry.peerIds.add(pid); entry.online = true; contact(id).seen = Date.now();
+        flushDM(id); dmChanged(id); return;
+      }
+      if (!entry.peerIds.has(pid)) return;
+      if (d?.ack){ const o = dmData(id); o.outbox = o.outbox.filter(m => m.mid !== d.ack); const m = o.msgs.find(m => m.mid === d.ack); if (m) m.ok = 1; save(); dmChanged(id); return; }
+      if (typeof d?.t === 'string' && d.mid){
+        send({ack:d.mid}, pid).catch(() => {});
+        const o = dmData(id);
+        if (o.msgs.some(m => m.mid === d.mid)) return;   // already have it (resent after a reconnect)
+        o.msgs.push({me:0, t:d.t.slice(0, 2000), ts:Date.now(), mid:d.mid}); o.msgs = o.msgs.slice(-DM_LIMIT);
+        if (activeConv !== id || document.hidden) o.unread++;
+        save(); dmChanged(id);
+        beep('mention'); notify(friendName(id), d.t);
+      }
+    });
+  } catch(e){ dms.delete(id); console.warn('dm', e); }
+}
+function stopDM(id){ const e = dms.get(id); try { e?.room?.leave(); } catch {} dms.delete(id); }
+function startAllDMs(){ for (const [id, c] of Object.entries(S.contacts)) if (c.verified) startDM(id); }
+function flushDM(id){
+  const e = dms.get(id), o = dmData(id); if (!e?.online || !e.send) return;
+  for (const m of o.outbox) e.send({t:m.t, mid:m.mid}, [...e.peerIds]).catch(() => {});
+}
+function sendDM(id, text){
+  const o = dmData(id), mid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  o.msgs.push({me:1, t:text, ts:Date.now(), mid}); o.msgs = o.msgs.slice(-DM_LIMIT);
+  o.outbox.push({t:text, mid}); save(); flushDM(id); dmChanged(id);
+}
+
+// Conversation tabs above the chat: the room plus open private chats
+const openConvs = new Set();
+function openConv(id){
+  if (id !== 'room'){ openConvs.add(id); dmData(id).unread = 0; save(); startDM(id); }
+  activeConv = id; renderConvs(); renderDMLog(); $('text').focus();
+}
+function closeConv(id){ openConvs.delete(id); if (activeConv === id) activeConv = 'room'; renderConvs(); renderDMLog(); }
+function dmChanged(id){
+  if (dmData(id).unread && !openConvs.has(id)) openConvs.add(id);
+  renderConvs(); if (activeConv === id) renderDMLog(); renderFriends();
+}
+function renderConvs(){
+  const bar = $('convs'); if (!bar) return;
+  bar.innerHTML = '';
+  const tab = (id, text, unread, online) => {
+    const b = document.createElement('button'); b.className = 'conv' + (activeConv === id ? ' on' : '') + (unread ? ' unread' : '');
+    b.textContent = text + (unread ? ' (' + unread + ')' : '');
+    if (online !== undefined){ const dot = document.createElement('span'); dot.className = 'dot' + (online ? ' on' : ''); b.prepend(dot); }
+    b.onclick = () => openConv(id);
+    if (id !== 'room'){ const x = document.createElement('span'); x.className = 'x'; x.textContent = '×'; x.title = t('close'); x.onclick = e => { e.stopPropagation(); closeConv(id); }; b.append(x); }
+    bar.append(b);
+  };
+  tab('room', '# ' + (currentRoom?.label || t('room')));
+  for (const id of openConvs) tab(id, '@ ' + friendName(id), dmData(id).unread, !!dms.get(id)?.online);
+  bar.style.display = openConvs.size ? '' : 'none';
+  const totalUnread = Object.values(S.dm || {}).reduce((a, o) => a + (o.unread || 0), 0);
+  document.title = (totalUnread ? '(' + totalUnread + ') ' : '') + 'p2p voice';
+}
+function renderDMLog(){
+  const inRoom = activeConv === 'room';
+  $('log').style.display = inRoom ? '' : 'none'; $('dmlog').style.display = inRoom ? 'none' : '';
+  $('title').textContent = inRoom ? (currentRoom?.label || '') : '@ ' + friendName(activeConv);
+  $('inviteBtn').style.display = inRoom ? '' : 'none'; $('lockBtn').style.display = inRoom ? '' : 'none';
+  if (inRoom) return;
+  const box = $('dmlog'), o = dmData(activeConv), e = dms.get(activeConv);
+  o.unread = 0; save();
+  box.innerHTML = '';
+  const head = document.createElement('div'); head.className = 'sys line';
+  head.textContent = t(e?.online ? 'dmOnline' : 'dmOffline', friendName(activeConv));
+  box.append(head);
+  for (const m of o.msgs){
+    const d = document.createElement('div'); d.className = 'line';
+    const tm = document.createElement('span'); tm.className = 'gtime';
+    tm.textContent = '[' + new Date(m.ts).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false}) + '] ';
+    const nm = document.createElement('span'); nm.className = 'gname' + (m.me ? ' me' : ''); nm.textContent = '<' + (m.me ? S.name : friendName(activeConv)) + '> ';
+    d.append(tm, nm, document.createTextNode(m.t));
+    if (m.me){ const st = document.createElement('span'); st.className = 'dmst'; st.textContent = m.ok ? ' ✓' : ' …'; st.title = t(m.ok ? 'dmDelivered' : 'dmWaiting'); d.append(st); }
+    box.append(d);
+  }
+  box.scrollTop = box.scrollHeight;
+  renderConvs();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && activeConv !== 'room'){ dmData(activeConv).unread = 0; save(); renderConvs(); } });
+
 // Friends: every verified account, also when they are not here. Shown in the second sidebar tab.
 let sideTab = 'room';
 const friendOpen = new Set();
@@ -969,7 +1098,8 @@ function setTab(tab){
 function renderFriends(){
   const box = $('friends'); if (!box) return;
   const list = Object.entries(S.contacts).filter(([, c]) => c.verified);
-  $('tabFriends').textContent = t('friends') + (list.length ? ' ' + list.length : '');
+  const unreadAll = list.reduce((a, [id]) => a + (S.dm?.[id]?.unread || 0), 0);
+  $('tabFriends').textContent = t('friends') + (list.length ? ' ' + list.length : '') + (unreadAll ? ' \u2022' : '');
   if (sideTab !== 'friends') return;
   box.innerHTML = '';
   if (!list.length){ const d = document.createElement('div'); d.className = 'note'; d.style.padding = '8px'; d.textContent = t('noFriends'); box.append(d); return; }
@@ -984,10 +1114,13 @@ function renderFriends(){
     const b = document.createElement('span'); b.className = 'badge ok'; b.textContent = '✓ ';
     nm.append(b, name);
     const st = document.createElement('div'); st.className = 'pstat' + (h ? ' talk' : '');
-    st.textContent = h ? t('hereNow') : t('lastSeen', ago(c.seen)) + (c.room ? ' · ' + c.room : '');
+    const on = !!dms.get(id)?.online, un = dmData(id).unread;
+    if (un){ const u = document.createElement('span'); u.className = 'badge warn'; u.textContent = ' (' + un + ')'; nm.append(u); }
+    if (on && !h) st.classList.add('talk');
+    st.textContent = h ? t('hereNow') : on ? t('onlineNow') : t('lastSeen', ago(c.seen)) + (c.room ? ' · ' + c.room : '');
     info.append(nm, st);
     const chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = friendOpen.has(id) ? '▾' : '▸';
-    const av = avatar(name); if (!h) av.classList.add('off');
+    const av = avatar(name); if (!h && !on) av.classList.add('off');
     row.append(av, info, chev);
     row.onclick = () => { friendOpen.has(id) ? friendOpen.delete(id) : friendOpen.add(id); renderFriends(); };
     wrap.append(row);
@@ -998,6 +1131,9 @@ function renderFriends(){
       if (c.nick) card.append(kv(t('nameShort'), c.name));
       if (c.names?.length) card.append(kv(t('akaShort'), c.names.join(', ')));
       const acts = [];
+      const dmb = btn(t('dmBtn'), e => { e.stopPropagation(); openConv(id); });
+      if (!c.x){ dmb.disabled = true; dmb.title = t('dmNoKey'); }
+      acts.push(dmb);
       if (h){
         const m = btn(t('pmBtn'), e => { e.stopPropagation(); $('text').value = '/msg ' + handle(h[1]) + ' '; $('text').focus(); });
         acts.push(m, btn(t('invBtn'), e => { e.stopPropagation(); inviteTo(h[1], h[0]); }));
@@ -1010,7 +1146,7 @@ function renderFriends(){
       acts.push(btn(t('unfriend'), e => {
         e.stopPropagation();
         if (!confirm(t('unverifyQ', name))) return;
-        c.verified = false; save(); friendOpen.delete(id); refreshAccess(); renderFriends();
+        c.verified = false; save(); friendOpen.delete(id); stopDM(id); closeConv(id); refreshAccess(); renderFriends();
       }));
       const a = document.createElement('div'); a.className = 'acts'; a.append(...acts); card.append(a);
       wrap.append(card);
@@ -1329,8 +1465,8 @@ function setLock(on){
 }
 function verifyPeer(p){
   const ct = contact(p.acct);
-  if (ct.verified){ if (confirm(t('unverifyQ', disp(p)))){ ct.verified = false; save(); refreshAccess(); } return; }
-  if (confirm(t('verifyQ', disp(p), p.code))){ ct.verified = true; save(); refreshAccess(); }
+  if (ct.verified){ if (confirm(t('unverifyQ', disp(p)))){ ct.verified = false; save(); stopDM(p.acct); closeConv(p.acct); refreshAccess(); } return; }
+  if (confirm(t('verifyQ', disp(p), p.code))){ ct.verified = true; save(); startDM(p.acct); refreshAccess(); }
 }
 
 // Adds a peer the first time anything arrives from it, so a missed join event cannot hide someone
@@ -1510,21 +1646,21 @@ async function makeLayerKey(secretHex){
   const raw = await crypto.subtle.digest('SHA-256', enc.encode('p2p-chat-layer-v1|' + secretHex));
   layerKey = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
 }
-async function seal(name, data){
+async function seal(name, data, key = layerKey){
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv, additionalData:enc.encode(name)}, layerKey, enc.encode(JSON.stringify(data)));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv, additionalData:enc.encode(name)}, key, enc.encode(JSON.stringify(data)));
   return b64(iv) + '.' + b64(ct);
 }
-async function unseal(name, box){
+async function unseal(name, box, key = layerKey){
   if (typeof box !== 'string') return undefined;
   const [iv, ct] = box.split('.');
-  try { return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM', iv:unb64(iv), additionalData:enc.encode(name)}, layerKey, unb64(ct)))); }
+  try { return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM', iv:unb64(iv), additionalData:enc.encode(name)}, key, unb64(ct)))); }
   catch { return undefined; }
 }
-function secureAction(name){
-  const [rawSend, rawGet] = room.makeAction(name);
-  const send = (data, targets) => seal(name, data).then(box => rawSend(box, targets));
-  const get = fn => rawGet(async (box, id) => { const d = await unseal(name, box); if (d !== undefined) fn(d, id); });
+function secureAction(name, rm = room, key = layerKey){
+  const [rawSend, rawGet] = rm.makeAction(name);
+  const send = (data, targets) => seal(name, data, key).then(box => rawSend(box, targets));
+  const get = fn => rawGet(async (box, id) => { const d = await unseal(name, box, key); if (d !== undefined) fn(d, id); });
   return [send, get];
 }
 
@@ -1608,6 +1744,7 @@ async function join(r, secret, ice){
         sys(t('renamedMsg', c.nick || c.name, p.name));
         c.names = [c.name, ...c.names.filter(n => n !== c.name && n !== p.name)].slice(0, 5);
       }
+      c.x = d.x; c.y = d.y;
       c.name = p.name; c.seen = Date.now(); c.room = currentRoom?.demo ? '' : currentRoom?.label || '';
       p.vol = c.vol ?? p.vol; applyPeerVol(p);
       p.code = await pairCode(d.x, d.y); c.code = p.code;
@@ -1749,6 +1886,7 @@ $('go').onclick = async () => {
   step(t('bootKey') + ' ok');
   await join(r, secret, ice);
   inRoomTab = true;
+  startAllDMs(); renderConvs();
   step(t('bootRelays', RELAYS.length));
   renderPeers(); sys(t('youJoined', r.label));
   if (!S.simple){
@@ -1871,6 +2009,7 @@ function sendText(){
   $('text').value = '';
   if (txt.startsWith('/') && !txt.startsWith('//')) return command(txt);
   const body = txt.startsWith('//') ? txt.slice(1) : txt;
+  if (activeConv !== 'room'){ sendDM(activeConv, body); return; }
   chat(S.name, body, 'me'); broadcast({t:body});
 }
 
