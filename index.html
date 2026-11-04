@@ -12,8 +12,11 @@
   --bg:#050805;--panel:#0a110a;--panel2:#0d170d;--line:#1d3a1d;
   --fg:#39ff6a;--dim:#2a9c48;--faint:#1b5e2c;--hi:#b6ffc9;--warn:#ffb000;--bad:#ff4040;
   --g:57,255,106;--glow:0 0 6px rgba(var(--g),.55);
+  --accent:var(--fg);--voice:var(--fg);--online:var(--fg);--unread:var(--warn);--liveBg:var(--fg);--liveFg:var(--bg);--onAccent:var(--bg);
 }
 [data-theme=amber]{--bg:#0a0700;--panel:#120d02;--panel2:#1a1303;--line:#3d2c08;--fg:#ffb000;--dim:#b37b00;--faint:#5e4100;--hi:#ffe2a8;--warn:#ff6a00;--g:255,176,0}
+[data-theme=normal]{--bg:#15171c;--panel:#1c1f25;--panel2:#252931;--line:#2d323b;--fg:#dfe3e8;--dim:#98a0ab;--faint:#5d6470;--hi:#ffffff;--warn:#f0b232;--bad:#f2555a;--g:79,124,255;--glow:none;
+  --accent:#4f7cff;--voice:#2fbf71;--online:#2fbf71;--unread:#f2555a;--liveBg:rgba(47,191,113,.16);--liveFg:#7ee8b0;--onAccent:#fff}
 [data-theme=cyan]{--bg:#02080a;--panel:#061114;--panel2:#08181c;--line:#123a42;--fg:#33e6ff;--dim:#1f97a8;--faint:#145560;--hi:#c2f6ff;--warn:#ffb000;--g:51,230,255}
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
@@ -64,9 +67,13 @@ label{display:grid;gap:4px;font-size:12px;color:var(--dim);text-transform:upperc
 .codeTxt{letter-spacing:.08em}
 .badge.ok{color:var(--fg)}.badge.warn{color:var(--warn)}.badge.bad{color:var(--bad)}
 .person:hover{background:var(--panel2)}
-.av{width:30px;height:30px;display:grid;place-items:center;font-weight:700;flex:none;border:1px solid var(--dim);color:var(--fg);background:var(--bg) !important;transition:all .1s}
-.av.talk{background:var(--fg) !important;color:var(--bg);box-shadow:var(--glow);text-shadow:none}
-.pinfo{flex:1;min-width:0}
+.av{--avbg:var(--bg);--lvc:rgba(var(--g),.55);width:30px;height:30px;display:grid;place-items:center;font-weight:700;flex:none;border:1px solid var(--dim);color:var(--fg);background:linear-gradient(to top,var(--lvc) var(--lvp,0%),var(--avbg) 0) !important;transition:box-shadow .1s}
+.av.talk{box-shadow:0 0 0 2px var(--voice),var(--glow);border-color:var(--voice)}
+.pinfo{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.pinfo .pname{flex:1;min-width:0}
+.pinfo .lvl{display:none}
+.pstat:empty{display:none}
+.pstat.mut{color:var(--warn)}
 .pname{color:var(--hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pstat{font-size:12px;color:var(--dim)}
 .pstat.talk{color:var(--fg)}
@@ -141,56 +148,107 @@ dialog h3::before{content:"# "}
 #welcome h2{margin:0;font-size:18px;font-weight:400;color:var(--hi)}
 #welcome h2::before{content:"$ ";color:var(--fg)}
 #welcome h2::after{content:"_";animation:blink 1s steps(1) infinite}
-/* Main layout: rooms and friends | chat | people, with the voice bar at the bottom */
-#app{display:none;flex:1;min-height:0;grid-template-columns:230px minmax(0,1fr) 260px;grid-template-rows:minmax(0,1fr) auto}
-#app.noroom{grid-template-columns:230px minmax(0,1fr)}
-#app.noroom #side{display:none}
-#nav{grid-column:1;grid-row:1;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:6px 6px 12px;display:flex;flex-direction:column;gap:2px;min-height:0}
+/* Main layout: profile and list | chat | people, with the voice bar at the bottom */
+#app{display:none;flex:1;min-height:0;grid-template-columns:260px minmax(0,1fr) 260px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"prof main side" "nav main side" "bar bar bar"}
+#app.noside{grid-template-columns:260px minmax(0,1fr);grid-template-areas:"prof main" "nav main" "bar bar"}
+#app.noside #side{display:none}
+#prof{grid-area:prof;display:flex;align-items:center;gap:6px;background:var(--panel);border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px}
+#prof>.av{margin-left:6px}
+.pmeta{flex:1}
+.mebtn{display:block !important;max-width:100%;overflow:hidden;border:0 !important;background:transparent !important;padding:0 2px !important;text-transform:none !important;letter-spacing:0 !important;text-align:left;color:var(--fg) !important;box-shadow:none !important}
+.mebtn:hover{background:var(--panel2) !important}
+.pmeta{display:grid;min-width:0}
+#meName{color:var(--hi);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+#meSub{font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kebab{padding:0 8px !important;font-size:16px !important;line-height:1.5;border-color:transparent !important;background:transparent !important;color:var(--dim) !important;box-shadow:none !important}
+.kebab:hover{color:var(--hi) !important;background:var(--panel2) !important}
+#menu{display:none;position:fixed;z-index:60;min-width:200px;background:var(--panel);border:1px solid var(--line);padding:4px;box-shadow:0 10px 30px rgba(0,0,0,.55);flex-direction:column}
+#menu.on{display:flex}
+#menu button{border:0;text-align:left;padding:9px 12px;background:transparent;font-size:13px;text-transform:none;letter-spacing:0}
+#menu button:hover{background:var(--panel2);color:var(--hi)}
+#menu button.danger{color:var(--bad)}
+#menu button.go{color:var(--voice)}
+#toast{display:none;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:70;background:var(--panel2);border:1px solid var(--line);color:var(--hi);padding:8px 14px;max-width:calc(100% - 32px);text-align:center;font-size:13px}
+#toast.on{display:block}
+#roomOff{flex:1;display:none;align-items:center;justify-content:center;padding:24px;text-align:center}
+.offbox{display:grid;gap:14px;justify-items:center;max-width:400px}
+.offbox h2{margin:0;font-size:20px;font-weight:600;color:var(--hi)}
+#offText{color:var(--dim);white-space:pre-line}
+#offJoin{padding:10px 22px;border-color:var(--voice) !important;color:var(--voice)}
+[data-theme=normal] #offJoin{background:var(--voice);color:#fff}
+.ttl{flex:1;min-width:0;display:grid}
+#status{font-size:11px}
+#peopleBtn{display:inline-flex;align-items:center;gap:6px}
+#peopleBtn[hidden]{display:none !important}
+@media (min-width:701px){#peopleBtn{display:none !important}}
+#peopleBtn svg{width:14px;height:14px;fill:currentColor}
+#minis{display:none;gap:3px}
+#minis .av{width:20px;height:20px;font-size:10px}
+#peopleBtn.on{border-color:var(--accent);color:var(--accent)}
+#nav{grid-area:nav;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:6px 6px 12px;display:flex;flex-direction:column;gap:2px;min-height:0}
 .navhead{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 8px 6px;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
 .navhead>span:first-child::before{content:"// "}
 .navhead button{padding:1px 7px;font-size:11px}
 .navnote{padding:4px 8px;color:var(--fg)}
-.navitem{display:flex;align-items:center;gap:8px;padding:7px 8px;cursor:pointer;border-left:2px solid transparent;min-height:34px}
+.navitem{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 8px;cursor:pointer;border-left:2px solid transparent;min-height:34px}
 .navitem:hover{background:var(--panel2)}
 .navitem.sel{background:var(--panel2);border-left-color:var(--fg)}
 .navitem .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--hi)}
 .navitem .meta{font-size:11px;color:var(--dim);white-space:nowrap}
-.navitem .meta.live{color:var(--fg)}
-.navitem .meta.unread{color:var(--warn)}
+.navitem .meta.live{color:var(--voice)}
+.navitem .meta.unread{background:var(--unread);color:var(--onAccent);border-radius:9px;padding:0 6px;font-weight:700;text-shadow:none}
 .navitem .ic{width:14px;text-align:center;color:var(--dim);flex:none}
 .navitem .ic.live{color:var(--fg);text-shadow:var(--glow)}
-.navitem .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none;margin:0 3px}
-.navitem .dot.on{background:var(--fg);box-shadow:var(--glow)}
-.navitem .acts{display:none;gap:2px}
-.navitem:hover .acts{display:flex}
-.navitem .acts button{padding:0 5px;font-size:11px}
+.navitem .dot{width:9px;height:9px;border-radius:50%;background:transparent;border:1.5px solid var(--faint);flex:none;margin:0 3px}
+.navitem .dot.on{background:var(--online);border-color:var(--online);box-shadow:var(--glow)}
+.navitem.live{background:var(--liveBg);border-left-color:var(--voice)}
+.navitem.live .nm,.navitem.live .meta,.navitem.live .ic,.navitem.live .kebab{color:var(--liveFg) !important;text-shadow:none}
+.navitem .spk{width:14px;height:14px;fill:currentColor;flex:none;vertical-align:-2px}
+.navitem .vtag{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid currentColor;border-radius:4px;padding:0 4px}
+#liveTag{display:none !important;align-items:center;gap:5px;font-size:12px;color:var(--voice);white-space:nowrap}
+#liveTag.on{display:inline-flex}
+#liveTag i{width:8px;height:8px;border-radius:50%;background:var(--voice);animation:pulse 2s ease-in-out infinite}
+#callBtn.join{border-color:var(--voice);color:var(--voice)}
+#callBtn.join:hover{background:var(--voice);color:var(--onAccent)}
+#callBtn svg{width:14px;height:14px;fill:currentColor;vertical-align:-2px;margin-right:4px}
 .navempty{padding:4px 8px 8px;font-size:12px;color:var(--dim)}
-#main{grid-column:2;grid-row:1;display:flex;flex-direction:column;min-width:0;min-height:0}
-#side{grid-column:3;grid-row:1;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#main{grid-area:main;display:flex;flex-direction:column;min-width:0;min-height:0}
+#side{grid-area:side;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
 #side .title{padding:12px 14px 6px;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
 #side .title::before{content:"// "}
 #people{flex:1;overflow-y:auto;padding:0 6px}
 #peoplePanel{flex:1;display:flex;flex-direction:column;min-height:0}
 #home{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;color:var(--dim);text-align:center;white-space:pre-line}
 /* Voice bar: always shows where you are talking */
-#bar{grid-column:1 / -1;grid-row:2;display:flex;align-items:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+#bar{grid-area:bar;display:flex;align-items:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
 #bar button{display:flex;align-items:center;gap:6px;font-size:11px;padding:7px 10px}
 #bar svg{width:16px;height:16px;fill:currentColor;flex:none}
-.me{border-color:transparent !important;text-transform:none !important;letter-spacing:0 !important;font-size:13px !important;color:var(--hi) !important;max-width:170px;overflow:hidden}
-.me span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#voice{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);font-size:12px;color:var(--dim);min-width:0}
+#voice{display:flex;align-items:center;gap:6px;padding:0 2px;font-size:12px;color:var(--dim);min-width:0;cursor:default}
+#voice.on{cursor:pointer}
+#voice.on:hover span:last-child{text-decoration:underline}
 #voice .vdot{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none}
-#voice.on{border-color:var(--fg);color:var(--fg)}
+#voice.on{color:var(--voice)}
 #voice.on .vdot{background:var(--fg);box-shadow:var(--glow);animation:pulse 2s ease-in-out infinite}
 #voice span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @keyframes pulse{50%{opacity:.4}}
 #master{display:flex;align-items:center;gap:8px;flex:1;min-width:120px;max-width:300px;margin-left:auto}
+#bar{min-height:54px}
+#callBtn{padding:7px 14px !important}
 #master svg{width:16px;height:16px;fill:var(--dim);flex:none;cursor:pointer}
 #master input{flex:1;padding:0}
 #master span{font-size:12px;color:var(--dim);width:38px;text-align:right}
-#mute.off{border-color:var(--warn);color:var(--warn);text-shadow:none}
-#mute.off:hover{background:var(--warn);color:var(--bg)}
-#app.noroom #mute,#app.noroom #leave,#app.noroom #peopleBtn{display:none}
+
+#openSet{flex:none;display:grid;place-items:center;width:38px;height:38px;padding:0 !important;border-radius:50%;border-color:transparent}
+#openSet svg{width:19px;height:19px;fill:currentColor}
+#mute{flex:none;display:grid;place-items:center;width:38px;height:38px;padding:0 !important;border-radius:50%}
+#mute svg{width:18px;height:18px;fill:currentColor}
+#mute>span{display:none}
+#bar #mute,#prof #openSet{display:flex;justify-content:center;align-items:center;gap:0}
+#mute.off{border-color:var(--warn);color:var(--warn);background:rgba(240,178,50,.12)}
+#mute.dead{border-color:var(--bad);color:var(--bad);background:rgba(242,85,90,.12)}
+#mute.idle{opacity:.55}
+#mute.wait{animation:pulse 1.4s ease-in-out infinite}
+#callBtn[hidden]{display:none !important}
 /* Incoming call */
 #ringBanner{display:none;position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:40;background:var(--panel);border:1px solid var(--fg);box-shadow:0 0 24px rgba(var(--g),.35);padding:10px 14px;align-items:center;gap:10px;max-width:calc(100% - 24px)}
 #ringBanner.on{display:flex}
@@ -204,43 +262,124 @@ dialog h3::before{content:"# "}
 .boot{color:var(--dim);font-size:13px}
 #lockBtn.on{border-color:var(--warn);color:var(--warn)}
 .pstat.lock{color:var(--warn)}
+
+/* Standard theme: plain dark app look; colour carries meaning (green voice and online, blue selection, red unread and hang up) */
+[data-theme=normal] body{font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif;text-shadow:none}
+[data-theme=normal] body::after{display:none}
+[data-theme=normal] ::selection{background:var(--accent);color:#fff}
+[data-theme=normal] button{border-radius:6px;text-transform:none;letter-spacing:0;border-color:var(--line);background:var(--panel2);color:var(--fg);font-weight:500}
+[data-theme=normal] button:hover{background:#30353f;color:var(--hi);box-shadow:none}
+[data-theme=normal] button:disabled{opacity:.5;cursor:default}
+[data-theme=normal] button.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:none}
+[data-theme=normal] button.primary:hover{background:#3d69ee}
+[data-theme=normal] button.primary::before,[data-theme=normal] button.primary::after{content:none}
+[data-theme=normal] button.danger{background:rgba(242,85,90,.12);border-color:rgba(242,85,90,.55);color:#ff8084;text-shadow:none}
+[data-theme=normal] button.danger:hover{background:var(--bad);color:#fff}
+[data-theme=normal] #callBtn.join{background:var(--voice);border-color:var(--voice);color:#fff}
+[data-theme=normal] #callBtn.join:hover{background:#27a862}
+[data-theme=normal] input,[data-theme=normal] select{border-radius:6px;background:#101216;color:var(--hi);border-color:var(--line);caret-color:var(--accent)}
+[data-theme=normal] input:focus,[data-theme=normal] select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(79,124,255,.25)}
+[data-theme=normal] input[type=range],[data-theme=normal] input[type=checkbox]{accent-color:var(--accent)}
+[data-theme=normal] select option{background:var(--panel)}
+[data-theme=normal] label{text-transform:none;letter-spacing:0;font-size:13px}
+[data-theme=normal] .navhead>span:first-child::before,[data-theme=normal] #side .title::before,[data-theme=normal] #chathead h1::before,[data-theme=normal] form#send::before,
+[data-theme=normal] .sys::before,[data-theme=normal] .sec h4::before,[data-theme=normal] dialog h3::before,[data-theme=normal] #welcome h2::before,[data-theme=normal] #welcome h2::after{content:none}
+[data-theme=normal] .navhead,[data-theme=normal] #side .title{letter-spacing:.06em;font-weight:600;font-size:11px}
+[data-theme=normal] .navitem{border-radius:6px;border-left:3px solid transparent;margin:0 2px}
+[data-theme=normal] .navitem.sel{background:rgba(79,124,255,.16);border-left-color:var(--accent)}
+[data-theme=normal] .navitem.live{background:var(--liveBg);border-left-color:var(--voice)}
+[data-theme=normal] .navitem.live.sel{box-shadow:inset 0 0 0 1px rgba(47,191,113,.55)}
+[data-theme=normal] .navitem .nm{color:var(--fg)}
+[data-theme=normal] .navitem.live .nm{font-weight:600}
+[data-theme=normal] #chathead h1{font-weight:600;font-size:16px}
+[data-theme=normal] .gname{color:var(--hi);font-weight:600}
+[data-theme=normal] .gname.me{color:#8fb0ff}
+[data-theme=normal] .gtime{font-size:12px}
+[data-theme=normal] .boot{font:12px/1.5 ui-monospace,Consolas,monospace;color:var(--faint)}
+[data-theme=normal] .sys{color:var(--dim);font-style:italic}
+[data-theme=normal] .line.mention{background:rgba(240,178,50,.12);border-left-color:var(--warn)}
+[data-theme=normal] .line.action .gname{color:#8fb0ff}
+[data-theme=normal] .av{--avbg:#323844;--lvc:rgba(47,191,113,.9);border-radius:50%;border:0;color:var(--hi)}
+[data-theme=normal] .av.talk{color:#fff;box-shadow:0 0 0 2px rgba(47,191,113,.6)}
+[data-theme=normal] .pstat.talk,[data-theme=normal] .badge.ok,[data-theme=normal] .code.ok,[data-theme=normal] .pq.good,[data-theme=normal] .path.p2p,[data-theme=normal] .path.lan{color:var(--voice)}
+[data-theme=normal] .code.ok button{border-color:var(--voice)}
+[data-theme=normal] .lvl{border-radius:2px}
+[data-theme=normal] .lvl i,[data-theme=normal] #meter i{background:var(--voice)}
+[data-theme=normal] .bar i{background:var(--voice)}
+[data-theme=normal] .pwrap.open{border-left-color:var(--accent)}
+[data-theme=normal] .pcard,[data-theme=normal] .fcard,[data-theme=normal] details.more{border-radius:8px}
+[data-theme=normal] #voice.on{color:var(--liveFg)}
+[data-theme=normal] #voice.on .vdot{background:var(--voice);box-shadow:none}
+[data-theme=normal] dialog{border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+[data-theme=normal] dialog h3{font-weight:600}
+[data-theme=normal] .sec h4{font-weight:600;letter-spacing:.04em;font-size:12px}
+[data-theme=normal] #welcome .wbox{border-radius:12px;border-color:var(--line);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+[data-theme=normal] #welcome h2{font-weight:600}
+[data-theme=normal] #ringBanner{border-radius:10px;border-color:var(--voice);box-shadow:0 10px 40px rgba(0,0,0,.6)}
+[data-theme=normal] #soundBanner{border-radius:8px}
+[data-theme=normal] form#send{gap:10px}
+[data-theme=normal] form#send input{background:#101216;border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+[data-theme=normal] .person:hover{background:var(--panel2);border-radius:6px}
+[data-theme=normal] #master svg{fill:var(--dim)}
+/* Right column: the friend's card in a friend chat, the people in voice in a room or call */
+#friendBox{padding:0 10px}
+body:not([data-view=dm]) #friendPanel{display:none}
+#peoplePanel{display:none !important}
+body.peopleOpen #peoplePanel{display:flex !important}
+body.peopleOpen #friendPanel{display:none}
+#roomPeople{display:none}
+#nav #people{flex:none;overflow:visible;padding:2px 0 8px 14px;margin-left:12px;border-left:1px solid var(--line)}
+#nav #people .person,#roomPeople .person{padding:4px 6px}
+#nav #people .av{width:24px;height:24px;font-size:11px}
+#nav #people .pstat,#roomPeople .pstat{font-size:11px;white-space:nowrap}
+#nav #people .person,#roomPeople .person{gap:8px}
+#nav #people .av,#roomPeople .av{width:22px;height:22px;font-size:11px}
+.vtag.fold{cursor:pointer}
+.vtag.fold:hover{background:rgba(255,255,255,.08)}
+#friendPanel{flex:none}
+#askDlg{width:min(420px,calc(100% - 24px))}
+#askText{color:var(--hi);white-space:pre-line}
+#askList{display:grid;gap:6px}
+#askList:empty{display:none}
+#askList button{text-align:left}
 /* Simple mode: plain look, advanced things hidden */
 body.simple .adv{display:none !important}
-/* Narrower screens: people list opens as a panel from the People button */
+/* Narrower screens: the people list opens as a panel from the strip in the chat header and closes by itself */
 @media (max-width:1000px){
-  #app{grid-template-columns:220px minmax(0,1fr)}
-  #side{display:none}
-  .tabletOnly{display:flex !important}
-  #app.noroom .tabletOnly{display:none !important}
-  body.peopleOpen #side{display:flex;position:fixed;right:0;top:0;bottom:var(--barH,60px);width:min(320px,100%);z-index:20;border-left:1px solid var(--fg)}
-  #peopleBtn.on{border-color:var(--fg);background:var(--panel2);color:var(--fg)}
+  #app,#app.noside{grid-template-columns:240px minmax(0,1fr);grid-template-areas:"prof main" "nav main" "bar bar"}
+  #app #side{display:none}
 }
-/* Phones: rooms and friends are the home screen, a room or chat opens full screen */
+/* Phones: profile on top, the list or the open chat in the middle, voice controls at the bottom */
 @media (max-width:700px){
-  #app,#app.noroom{grid-template-columns:minmax(0,1fr)}
-  #nav,#main{grid-column:1}
+  #app,#app.noside{grid-template-columns:minmax(0,1fr);grid-template-areas:"prof" "content" "bar"}
+  #nav,#main{grid-area:content}
+  #prof{border-right:0;padding:4px 6px}
   body[data-view=home] #main{display:none}
   body:not([data-view=home]) #nav{display:none}
   .mobileOnly{display:inline-block !important}
-  body.peopleOpen #side{left:0;width:auto}
-  #bar{gap:4px;padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
-  #bar button{padding:6px 8px}
-  #bar button>span:not(#meName):not(#peopleLbl){display:none}
-  .me{max-width:96px}
-  #voice{order:-1;flex:1 1 100%;justify-content:flex-start}
-  #master{min-width:90px}
-  #master span{display:none}
-  #chathead{padding:8px 12px;gap:6px}
+  body.peopleOpen #app #side{display:flex;position:fixed;left:0;right:0;bottom:var(--barH,60px);max-height:70dvh;z-index:20;border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.4)}
+  #minis{display:inline-flex}
+  #peopleBtn svg{display:none}
+  #bar{gap:6px;padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  #bar button{padding:8px 10px}
+  #bar button:not(#callBtn)>span{display:none}
+  #callBtn{flex:1;justify-content:center}
+  #mute{width:46px;height:40px;border-radius:8px}
+  #master{display:none}
+  #chathead{padding:8px 10px;gap:6px}
   #chathead h1{font-size:15px;min-width:0}
   #chathead h1::before{content:none}
-  #chathead #status{display:none}
   #chathead button{padding:3px 8px;font-size:11px}
   #log,#dmlog{padding:8px 12px;font-size:14px}
   form#send{padding:8px 12px}
   form#send input{font-size:16px}
   form#send button{padding:8px 12px}
-  .navitem{min-height:44px}
-  .navitem .acts{display:flex}
+  .navitem{min-height:46px}
+  #roomPeople:not(:empty){display:block;max-height:38dvh;overflow-y:auto;background:var(--panel);border-bottom:1px solid var(--line);padding:4px 6px}
+  #roomPeople #people{overflow:visible;padding:0}
+  #peopleLbl{font-size:12px}
+  #liveTag{display:none !important}
+  #status{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   dialog{padding:14px;width:calc(100% - 16px);max-height:92dvh}
   .dlgFoot{bottom:-14px;margin:0 -14px -14px;padding:10px 14px 14px}
 }
@@ -263,7 +402,8 @@ body.simple .adv{display:none !important}
 
 <div id="ringBanner"><span id="ringText"></span><button class="small" id="ringYes" data-t="answer"></button><button class="small danger" id="ringNo" data-t="decline"></button></div>
 
-<div id="app" class="noroom">
+<div id="app" class="noroom noside">
+  <header id="prof"><span class="av" id="meAv"></span><div class="pmeta"><button id="meBtn" class="mebtn" data-tt="changeName"><span id="meName"></span></button><div id="voice"><span class="vdot"></span><span id="voiceTxt"></span></div></div><button id="openSet" data-tt="settings"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7 7 0 0 0-1.7-1L15 3h-4l-.4 2.6a7 7 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7 7 0 0 0 1.7 1L11 21h4l.4-2.6a7 7 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button></header>
   <nav id="nav">
     <div class="navhead"><span data-t="rooms"></span><span class="row" style="gap:4px"><button class="small" id="pasteInv" data-t="pasteShort"></button><button class="small" id="addRoom" data-t="addShort"></button></span></div>
     <div class="note navnote" id="inviteNote" style="display:none"></div>
@@ -272,8 +412,10 @@ body.simple .adv{display:none !important}
     <div id="friends" class="adv"></div>
   </nav>
   <div id="main">
-    <div id="chathead"><button class="small mobileOnly" id="backBtn">&larr;</button><h1 id="title"></h1><button class="small" id="callBtn" data-t="call"></button><button class="small" id="inviteBtn" data-t="invite"></button><button class="small adv" id="lockBtn"></button><span class="note" id="status"></span></div>
+    <div id="chathead"><button class="small mobileOnly" id="backBtn">&larr;</button><div class="ttl"><h1 id="title"></h1><span class="note" id="status"></span></div><span id="liveTag"><i></i><span id="liveTxt"></span></span><button class="small" id="peopleBtn" hidden><span id="minis"></span><svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13zm8 0c-.3 0-.6 0-1 .1 1.2.8 2 2 2 3.4V19h6v-2.5c0-2.3-4.7-3.5-7-3.5z"/></svg><span id="peopleLbl"></span></button><button class="small kebab" id="headMenu">&#8942;</button></div>
+    <div id="roomPeople"></div>
     <div id="home"><div data-t="homeHint"></div></div>
+    <div id="roomOff"><div class="offbox"><h2 id="offTitle"></h2><div id="offText"></div><button class="primary" id="offJoin" data-t="joinVoice"></button></div></div>
     <div id="log"></div>
     <div id="dmlog" style="display:none"></div>
     <form id="send">
@@ -281,21 +423,21 @@ body.simple .adv{display:none !important}
       <button class="primary" data-t="send"></button>
     </form>
   </div>
-  <aside id="side"><div id="peoplePanel"><div class="title" id="count"></div><div id="people"></div></div></aside>
+  <aside id="side"><div id="friendPanel"><div class="title" id="friendTitle"></div><div id="friendBox"></div></div><div id="peoplePanel"><div class="title" id="count"></div><div id="people"></div></div></aside>
   <footer id="bar">
-    <button id="meBtn" class="me" data-tt="changeName"><span id="meName"></span></button>
-    <div id="voice"><span class="vdot"></span><span id="voiceTxt"></span></div>
-    <button id="peopleBtn" class="tabletOnly"><svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13zm8 0c-.3 0-.6 0-1 .1 1.2.8 2 2 2 3.4V19h6v-2.5c0-2.3-4.7-3.5-7-3.5z"/></svg><span id="peopleLbl"></span></button>
-    <button id="mute" data-tt="mute"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11z"/></svg><span></span></button>
-    <button id="leave" class="danger" data-tt="leave"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.8 1.1-2.6 1.8-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.3 8.8 7.5 7 12 7s8.7 1.8 11.7 4.7a1 1 0 0 1 0 1.4l-2.5 2.4c-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3-.8-.7-1.6-1.3-2.6-1.8-.4-.2-.6-.5-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg><span id="leaveLbl"></span></button>
+    <button id="mute" data-tt="mute"><svg viewBox="0 0 24 24"><path id="micPath" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg><span></span></button>
+    <button id="callBtn"></button>
     <div id="master">
       <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
       <input type="range" id="masterVol" min="0" max="100" step="1">
       <span id="masterV"></span>
     </div>
-    <button id="openSet" data-tt="settings"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7 7 0 0 0-1.7-1L15 3h-4l-.4 2.6a7 7 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7 7 0 0 0 1.7 1L11 21h4l.4-2.6a7 7 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><span data-t="settings"></span></button>
   </footer>
 </div>
+<div id="menu"></div>
+<div id="toast"></div>
+<dialog id="askDlg"><div class="grid"><div id="askText"></div><input id="askInput" autocomplete="off"><div id="askList"></div><div class="row" style="justify-content:flex-end;gap:8px"><button id="askCancel"></button><button id="askOk" class="primary"></button></div></div></dialog>
+<dialog id="infoDlg"><div class="grid"><h3 id="infoTitle"></h3><div id="infoBox"></div><div class="row" style="justify-content:flex-end"><button class="primary" id="infoClose" data-t="done"></button></div></div></dialog>
 
 <dialog id="roomDlg">
   <div class="grid">
@@ -320,7 +462,7 @@ body.simple .adv{display:none !important}
       <h4><span data-t="secLook"></span></h4>
       <div><div class="ol" data-t="yourName"></div><div class="row"><input id="myName" maxlength="24"><button class="small" id="myNameSave" data-t="save"></button></div></div>
       <div><div class="ol" data-t="language"></div><select class="langSel"><option value="en">English</option><option value="pl">Polski</option></select></div>
-      <div><div class="ol" data-t="theme"></div><select id="theme"><option value="green" data-t="themeGreen"></option><option value="amber" data-t="themeAmber"></option><option value="cyan" data-t="themeCyan"></option></select></div>
+      <div><div class="ol" data-t="theme"></div><select id="theme"><option value="normal" data-t="themeNormal"></option><option value="green" data-t="themeGreen"></option><option value="amber" data-t="themeAmber"></option><option value="cyan" data-t="themeCyan"></option></select></div>
       <label class="opt"><div><div class="ol" data-t="simpleMode"></div><div class="od" data-t="simpleDesc"></div></div><input type="checkbox" class="simpleChk"></label>
       <label class="opt"><div><div class="ol" data-t="sounds"></div><div class="od" data-t="soundsDesc"></div></div><input type="checkbox" id="sounds"></label>
       <label class="opt adv"><div><div class="ol" data-t="notifyOpt"></div><div class="od" data-t="notifyDesc"></div></div><input type="checkbox" id="notifyChk"></label>
@@ -349,9 +491,10 @@ body.simple .adv{display:none !important}
       <div><div class="ol"><span data-t="minLen"></span> <span id="minV"></span></div><input type="range" id="minLen" min="0" max="60" step="5"><div class="od" data-t="minLenDesc"></div></div>
     </div>
 
-    <div class="sec adv">
+    <div class="sec">
       <h4><span data-t="secPlayback"></span></h4>
-      <label class="opt"><div><div class="ol" data-t="boost"></div><div class="od" data-t="boostDesc"></div></div><input type="checkbox" id="boost"></label>
+      <div><div class="ol"><span data-t="masterVol"></span> <span id="masterV2"></span></div><input type="range" id="masterVol2" min="0" max="100" step="1"></div>
+      <label class="opt adv"><div><div class="ol" data-t="boost"></div><div class="od" data-t="boostDesc"></div></div><input type="checkbox" id="boost"></label>
     </div>
 
     <div class="sec adv">
@@ -409,13 +552,14 @@ const RELAYS = ['wss://relay.damus.io','wss://nos.lol','wss://relay.nostr.band',
 const APP_URL = '';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '8.0';
+const APP_VERSION = '8.1';
 const MAX_PEERS = 9; // plus self = 10
 
 // Settings
-const defaults = {name:'', rooms:[], selected:'', mic:'', ec:true, ns:true, agc:true, hp:true, gain:100, gate:true, thr:-50, minLen:35, nn:'rnnoise', boost:false, contacts:{}, theme:'green', simple:false, sounds:false, notify:false, master:100, turn:{url:'', user:'', pass:''}, locks:{}, lang:(navigator.language||'').toLowerCase().startsWith('pl') ? 'pl' : 'en'};
+const defaults = {name:'', rooms:[], selected:'', mic:'', ec:true, ns:true, agc:true, hp:true, gain:100, gate:true, thr:-50, minLen:35, nn:'rnnoise', boost:false, contacts:{}, theme:'normal', simple:false, sounds:false, notify:false, master:100, turn:{url:'', user:'', pass:''}, locks:{}, lang:(navigator.language||'').toLowerCase().startsWith('pl') ? 'pl' : 'en'};
 let S = {...defaults};
 try { S = {...defaults, ...JSON.parse(localStorage.getItem('p2pchat') || '{}')}; } catch {}
+if (!S.look2){ if (S.theme === 'green') S.theme = 'normal'; S.look2 = 1; }   // v8.1: the standard theme becomes the default once; terminal themes stay in Settings
 if (S.room && S.pass && !S.rooms.length) S.rooms.push({id:'r1', label:S.room, room:S.room, pass:S.pass});
 delete S.room; delete S.pass; delete S.remember;
 if (!S.nnDefault){ S.nn = 'rnnoise'; S.nnDefault = 1; } // one time switch to RNNoise as default
@@ -459,7 +603,7 @@ const LANG = {
     reconnecting:'reconnecting…', reconnected:'{0} reconnected', renamedMsg:'{0} is now called {1}', notThe:'not the {0} in your friends', sigBad:'identity check failed', loss:'loss',
     boost:'Allow volume above 100%',
     verifyQ:'Add {0} as a friend?\n\nTo be sure it is really them, compare this code with them, for example by reading it aloud (optional):\n\n{1}',
-    secLook:'Look and language', theme:'Colours', themeGreen:'Green terminal', themeAmber:'Amber terminal', themeCyan:'Cyan terminal',
+    secLook:'Look and language', theme:'Colours', themeNormal:'Standard', themeGreen:'Green terminal', themeAmber:'Amber terminal', themeCyan:'Cyan terminal',
     simpleMode:'Simple mode', simpleDesc:'A calmer look with only the basic options. Good for people who just want to talk.',
     sounds:'Sounds', soundsDesc:'Short beeps when people join, leave, write or mention you.',
     panic:'Panic: wipe everything', panicDesc:'Deletes your account, contacts, rooms and settings from this browser and leaves the call. Cannot be undone unless you exported your account.',
@@ -481,7 +625,7 @@ const LANG = {
     turnUserPh:'username', turnPassPh:'password',
     aloneHelp:'Nobody found yet. Invite others with the Invite button at the top. If they are here already, check:\n1. everyone uses the same version (v{0}, shown on the join screen)\n2. type /diag here and on the other computer and compare the results',
     aloneSimple:'Nobody has joined yet. Press Invite at the top and send the link to the people you want to talk to.',
-    path_p2p:'P2P', path_lan:'LAN', path_relay:'RELAY', pathDesc_p2p:'Direct connection over the internet', pathDesc_lan:'Direct connection inside your local network', pathDesc_relay:'Relayed through the TURN server, still end-to-end encrypted', netV6yes:'IPv6 available, direct connections to other IPv6 devices should work', netV6local:'IPv6 only local, no internet IPv6', netV6no:'no IPv6 on this network', netSvcBad:'TURN service failed: {0}', netNoTurn:'no TURN configured', bootTurn:'turn credentials ...', svcTitle:'TURN service (Cloudflare Worker)', svcDesc:'Address of the Worker that hands out TURN credentials. Leave empty to use the one built into this file.', turnIsOff:'switched off by the owner', turnNoSvc:'no TURN service address set', turnNoAdmin:'no admin key set in Settings > Network', turnBadAdmin:'wrong admin key', turnStOff:'off', turnStOn:'on', turnStOnUntil:'on until {0}', turnRevoked:'{0} credentials revoked', turnRejoin:'Rejoin the room so your connections can use it.', adminTitle:'Admin key (owner only)', adminDesc:'Only on the computer of the person who owns the TURN server. Lets you switch it with /turn on, /turn on 3 (hours) and /turn off. Never share it.', adminPh:'admin key', useRunning:'checking TURN usage…', useMine:'this device, this session: {0} relayed', useMonth:'account, {0}: {1} sent, {2} received', use24:'last 24 h: {0}', useFree:'{0}% of the free 1,000 GB used (counted on sent data, analytics lag a few minutes)', useBtn:'Show TURN usage', moreNet:'Advanced: TURN server', moreAcct:'Backup and reset', volShort:'Vol', akaShort:'Was', cardAccount:'ID', cardConn:'Link', cardCode:'Code', cardNick:'Nickname', demo:'Try demo', ambiguous:'more than one person has that name, use one of: {0}', pmBtn:'private message', pmShort:'Msg', inRoom:'In room', friends:'Friends', noFriends:'Nobody yet. Add people as friends from their card in the room.', hereNow:'here now', lastSeen:'seen {0}', agoNow:'just now', agoMin:'{0} min ago', agoHour:'{0} h ago', agoDay:'{0} days ago', nameShort:'Name', unfriend:'remove friend', masterVol:'Master volume', changeName:'change', dupAcct:'same account twice (two tabs?)', otherTabQ:'This app is already in a call in another tab of this browser. Tabs of one browser share the same account, which confuses the others.\n\nOK: join with a temporary account in this tab (for testing, nothing is saved)\nCancel: go back and use the other tab', tempAcct:'temporary account for this tab, nothing is saved', connIssue:'connection issue with {0}: {1}', silence:'mute for me', unsilence:'unmute', hearShort:'Hear', silenced:'muted by you', silencedMsg:'{0} is muted for you', unsilencedMsg:'{0} is no longer muted for you', soundBlocked:'Sound is blocked by the browser. Click here to enable it.', noAudioIn:'no audio arriving', netAudio:'audio engine: {0}, {1} Hz', audioRetry:'audio to {0} did not start, retrying ({1}/3)', notConnected:'not connected to you (seen by {0})', connectingTo:'connecting…', notConnectedDesc:'Others in the room are connected to this person, but your connection to them has not been established. It keeps trying automatically.', notConnCount:'{0} not connected', waitMicShort:'waiting for microphone…', micSlow:'The browser is still waiting for microphone permission. Click the microphone or lock icon in the address bar and allow it. You can already listen and chat.', notifyOpt:'Desktop notifications', notifyDesc:'Show a system notification when someone mentions you or sends a private message while this tab is in the background.', notifyDenied:'The browser blocked notifications. Allow them via the lock icon in the address bar.', netMdns:'local addresses are hidden (mDNS) until the microphone is allowed; LAN connections may fail if the network blocks multicast', diagSignal:'handshake error ({0}): {1}', diagIce:'connection attempt failed \u00b7 mine: {0} \u00b7 theirs: {1} \u00b7 pairs: {2}', diagRecent:'recent connection problems:', none:'none', pasteInvite:'Paste invite', invite:'Invite', copyInviteLink:'Copy invite link', noRooms:'No rooms yet. Open an invite link, paste an invite, or create a new room.', pasteQ:'Paste the invite link or code:', inviteBad:'That is not a valid invite.', inviteAdded:'Room "{0}" added. Type your name and press Join.', inviteCopied:'Invite link copied. Send it privately: anyone with the link can join this room.', inviteCodeCopied:'Invite code copied. The other person pastes it with "Paste invite" on the join screen. Send it privately.', demoRoom:'Demo room', chooseRoomQ:'Which room do you want to send?', invBtn:'send room invite', invSent:'Invite to "{0}" sent to {1}.', invRecv:'{0} invites you to the room "{1}".', invAdd:'add room', invHave:'already added', invAdded:'Room "{0}" added to your room list. Leave this room to join it.', dmBtn:'message', onlineNow:'online', dmOnline:'{0} is online. Private chat, end-to-end encrypted.', dmOffline:'{0} is offline. Messages wait on this device and are delivered when you are both online.', dmDelivered:'delivered', dmWaiting:'waiting for delivery', close:'close', dmNoKey:'Meet once in a room after updating, then private chat works', people:'People', welcomeTitle:'Welcome', continue:'Continue', pasteShort:'paste', addShort:'+ new', call:'call', inCall:'in call', homeHint:'Pick a room on the left to join its voice chat, or open a friend to write to them.\nNew here? Open an invite link, or create a room with + new and invite others.', answer:'answer', decline:'decline', changeName:'Change your name', appName:'p2p voice', noVoice:'not in voice', voiceCall:'call \u00b7 {0}', voiceRoom:'voice \u00b7 {0} \u00b7 {1}', voiceShow:'Show this room', hangUp:'Hang up', leaveFirst:'Leave the room before deleting it.', switchQ:'Leave "{0}" and join "{1}"?', statusShort:'Status', invSentShort:'invite to the room "{0}"', invRecvShort:'invites you to the room "{0}"', invShort:'Room', callOffline:'{0} is offline right now.', ringText:'{0} is calling', callDeclined:'{0} declined the call.', callEnded:'{0} hung up.', hereShort:'here', done:'Done', mainRoom:'Main room', builtIn:'(built in)', edit:'Edit', del:'Delete', delConfirm:'Delete room "{0}"?',
+    path_p2p:'P2P', path_lan:'LAN', path_relay:'RELAY', pathDesc_p2p:'Direct connection over the internet', pathDesc_lan:'Direct connection inside your local network', pathDesc_relay:'Relayed through the TURN server, still end-to-end encrypted', netV6yes:'IPv6 available, direct connections to other IPv6 devices should work', netV6local:'IPv6 only local, no internet IPv6', netV6no:'no IPv6 on this network', netSvcBad:'TURN service failed: {0}', netNoTurn:'no TURN configured', bootTurn:'turn credentials ...', svcTitle:'TURN service (Cloudflare Worker)', svcDesc:'Address of the Worker that hands out TURN credentials. Leave empty to use the one built into this file.', turnIsOff:'switched off by the owner', turnNoSvc:'no TURN service address set', turnNoAdmin:'no admin key set in Settings > Network', turnBadAdmin:'wrong admin key', turnStOff:'off', turnStOn:'on', turnStOnUntil:'on until {0}', turnRevoked:'{0} credentials revoked', turnRejoin:'Rejoin the room so your connections can use it.', adminTitle:'Admin key (owner only)', adminDesc:'Only on the computer of the person who owns the TURN server. Lets you switch it with /turn on, /turn on 3 (hours) and /turn off. Never share it.', adminPh:'admin key', useRunning:'checking TURN usage…', useMine:'this device, this session: {0} relayed', useMonth:'account, {0}: {1} sent, {2} received', use24:'last 24 h: {0}', useFree:'{0}% of the free 1,000 GB used (counted on sent data, analytics lag a few minutes)', useBtn:'Show TURN usage', moreNet:'Advanced: TURN server', moreAcct:'Backup and reset', volShort:'Vol', akaShort:'Was', cardAccount:'ID', cardConn:'Link', cardCode:'Code', cardNick:'Nickname', demo:'Try demo', ambiguous:'more than one person has that name, use one of: {0}', pmBtn:'private message', pmShort:'Msg', inRoom:'In room', friends:'Friends', noFriends:'Nobody yet. Add people as friends from their card in the room.', hereNow:'here now', lastSeen:'seen {0}', agoNow:'just now', agoMin:'{0} min ago', agoHour:'{0} h ago', agoDay:'{0} days ago', nameShort:'Name', unfriend:'remove friend', masterVol:'Master volume', changeName:'change', dupAcct:'same account twice (two tabs?)', otherTabQ:'This app is already in a call in another tab of this browser. Tabs of one browser share the same account, which confuses the others.\n\nOK: join with a temporary account in this tab (for testing, nothing is saved)\nCancel: go back and use the other tab', tempAcct:'temporary account for this tab, nothing is saved', connIssue:'connection issue with {0}: {1}', silence:'mute for me', unsilence:'unmute', hearShort:'Hear', silenced:'muted by you', silencedMsg:'{0} is muted for you', unsilencedMsg:'{0} is no longer muted for you', soundBlocked:'Sound is blocked by the browser. Click here to enable it.', noAudioIn:'no audio arriving', netAudio:'audio engine: {0}, {1} Hz', audioRetry:'audio to {0} did not start, retrying ({1}/3)', notConnected:'not connected to you (seen by {0})', connectingTo:'connecting…', notConnectedDesc:'Others in the room are connected to this person, but your connection to them has not been established. It keeps trying automatically.', notConnCount:'{0} not connected', waitMicShort:'waiting for microphone…', micSlow:'The browser is still waiting for microphone permission. Click the microphone or lock icon in the address bar and allow it. You can already listen and chat.', notifyOpt:'Desktop notifications', notifyDesc:'Show a system notification when someone mentions you or sends a private message while this tab is in the background.', notifyDenied:'The browser blocked notifications. Allow them via the lock icon in the address bar.', netMdns:'local addresses are hidden (mDNS) until the microphone is allowed; LAN connections may fail if the network blocks multicast', diagSignal:'handshake error ({0}): {1}', diagIce:'connection attempt failed \u00b7 mine: {0} \u00b7 theirs: {1} \u00b7 pairs: {2}', diagRecent:'recent connection problems:', none:'none', pasteInvite:'Paste invite', invite:'Invite', copyInviteLink:'Copy invite link', noRooms:'No rooms yet. Open an invite link, paste an invite, or create a new room.', pasteQ:'Paste the invite link or code:', inviteBad:'That is not a valid invite.', inviteAdded:'Room "{0}" added. Type your name and press Join.', inviteCopied:'Invite link copied. Send it privately: anyone with the link can join this room.', inviteCodeCopied:'Invite code copied. The other person pastes it with "Paste invite" on the join screen. Send it privately.', demoRoom:'Demo room', chooseRoomQ:'Which room do you want to send?', invBtn:'send room invite', invSent:'Invite to "{0}" sent to {1}.', invRecv:'{0} invites you to the room "{1}".', invAdd:'add room', invHave:'already added', invAdded:'Room "{0}" added to your room list. Leave this room to join it.', dmBtn:'message', onlineNow:'online', dmOnline:'{0} is online. Private chat, end-to-end encrypted.', dmOffline:'{0} is offline. Messages wait on this device and are delivered when you are both online.', dmDelivered:'delivered', dmWaiting:'waiting for delivery', close:'close', dmNoKey:'Meet once in a room after updating, then private chat works', people:'People', welcomeTitle:'Welcome', continue:'Continue', pasteShort:'paste', addShort:'+ new', call:'call', inCall:'in call', homeHint:'Open a room or a friend on the left. Joining voice or calling is the button at the bottom.\nNew here? Open an invite link, or create a room with + new and invite others.', answer:'answer', decline:'decline', changeName:'Change your name', appName:'p2p voice', noVoice:'not in voice', voiceCall:'call \u00b7 {0}', voiceRoom:'voice \u00b7 {0} \u00b7 {1}', voiceShow:'Show this room', hangUp:'Hang up', callBtnTxt:'Call', peopleFoldTip:'Show or hide who is here', ok:'OK', micDeadTip:'No microphone. Click to try again', joinVoice:'Join voice', details:'Details', more:'More', lockAct:'Lock: only friends can talk with me', unlockAct:'Unlock room', acctShort:'ID', roomOffText:'You are not in this room yet. Join to talk and see the chat.', roomOffSwitch:'Joining ends: {0}.', voiceHere:'you are in voice here', voiceTag:'voice', callTag:'in call', leaveFirst:'Leave the room before deleting it.', switchQ:'Leave "{0}" and join "{1}"?', statusShort:'Status', invSentShort:'invite to the room "{0}"', invRecvShort:'invites you to the room "{0}"', invShort:'Room', callOffline:'{0} is offline right now.', ringText:'{0} is calling', callDeclined:'{0} declined the call.', callEnded:'{0} hung up.', hereShort:'here', done:'Done', mainRoom:'Main room', builtIn:'(built in)', edit:'Edit', del:'Delete', delConfirm:'Delete room "{0}"?',
     needRoomPw:'Room name and password are required', error:'Error', active:'{0} active',
     nnFail:'{0} could not start here ({1}). In Edge or Chrome it needs the page hosted online, not opened as a file.',
     default:'Default', you:'(you)', muted:'Muted', inVoice:'In voice', talking:'Talking', sending:'Sending', quiet:'Quiet', volume:'Volume',
@@ -520,7 +664,7 @@ const LANG = {
     reconnecting:'ponowne łączenie…', reconnected:'{0} ponownie połączono', renamedMsg:'{0} zmienia nazwę na {1}', notThe:'to nie {0} z Twoich znajomych', sigBad:'weryfikacja tożsamości nieudana', loss:'strat',
     boost:'Pozwól na głośność powyżej 100%',
     verifyQ:'Dodać {0} do znajomych?\n\nAby mieć pewność, że to naprawdę ta osoba, porównajcie ten kod, np. czytając go na głos (opcjonalnie):\n\n{1}',
-    secLook:'Wygląd i język', theme:'Kolory', themeGreen:'Zielony terminal', themeAmber:'Bursztynowy terminal', themeCyan:'Błękitny terminal',
+    secLook:'Wygląd i język', theme:'Kolory', themeNormal:'Standardowy', themeGreen:'Zielony terminal', themeAmber:'Bursztynowy terminal', themeCyan:'Błękitny terminal',
     simpleMode:'Tryb prosty', simpleDesc:'Spokojniejszy wygląd i tylko podstawowe opcje. Dla osób, które chcą po prostu rozmawiać.',
     sounds:'Dźwięki', soundsDesc:'Krótkie sygnały, gdy ktoś dołącza, wychodzi, pisze lub Cię wspomina.',
     panic:'Panika: usuń wszystko', panicDesc:'Usuwa z tej przeglądarki Twoje konto, kontakty, pokoje i ustawienia oraz opuszcza rozmowę. Nie da się tego cofnąć, chyba że wyeksportowano konto.',
@@ -542,7 +686,7 @@ const LANG = {
     turnUserPh:'nazwa użytkownika', turnPassPh:'hasło',
     aloneHelp:'Nikogo jeszcze nie znaleziono. Zaproś innych przyciskiem Zaproś u góry. Jeśli już tu są, sprawdź:\n1. czy wszyscy mają tę samą wersję (v{0}, widoczna na ekranie dołączania)\n2. wpisz /diag tutaj i na drugim komputerze i porównaj wyniki',
     aloneSimple:'Nikt jeszcze nie dołączył. Kliknij Zaproś u góry i wyślij link osobom, z którymi chcesz rozmawiać.',
-    path_p2p:'P2P', path_lan:'LAN', path_relay:'PRZEKAŹNIK', pathDesc_p2p:'Bezpośrednie połączenie przez internet', pathDesc_lan:'Bezpośrednie połączenie w sieci lokalnej', pathDesc_relay:'Przez serwer TURN, nadal szyfrowane end-to-end', netV6yes:'IPv6 dostępne, połączenia bezpośrednie z innymi urządzeniami IPv6 powinny działać', netV6local:'IPv6 tylko lokalnie, brak IPv6 w internecie', netV6no:'brak IPv6 w tej sieci', netSvcBad:'usługa TURN nie działa: {0}', netNoTurn:'brak skonfigurowanego TURN', bootTurn:'dane TURN ...', svcTitle:'Usługa TURN (Cloudflare Worker)', svcDesc:'Adres Workera, który wydaje dane logowania TURN. Zostaw puste, aby użyć adresu wbudowanego w ten plik.', turnIsOff:'wyłączony przez właściciela', turnNoSvc:'nie ustawiono adresu usługi TURN', turnNoAdmin:'brak klucza administratora w Ustawienia > Sieć', turnBadAdmin:'zły klucz administratora', turnStOff:'wyłączony', turnStOn:'włączony', turnStOnUntil:'włączony do {0}', turnRevoked:'unieważniono dane: {0}', turnRejoin:'Dołącz ponownie do pokoju, aby połączenia mogły z niego korzystać.', adminTitle:'Klucz administratora (tylko właściciel)', adminDesc:'Tylko na komputerze właściciela serwera TURN. Pozwala przełączać go poleceniami /turn on, /turn on 3 (godziny) i /turn off. Nigdy go nie udostępniaj.', adminPh:'klucz administratora', useRunning:'sprawdzanie zużycia TURN…', useMine:'to urządzenie, ta sesja: {0} przez przekaźnik', useMonth:'konto, {0}: wysłano {1}, odebrano {2}', use24:'ostatnie 24 h: {0}', useFree:'wykorzystano {0}% darmowych 1000 GB (liczone od wysłanych danych, statystyki mają kilka minut opóźnienia)', useBtn:'Pokaż zużycie TURN', moreNet:'Zaawansowane: serwer TURN', moreAcct:'Kopia zapasowa i reset', volShort:'Głośn.', akaShort:'Dawniej', cardAccount:'ID', cardConn:'Łącze', cardCode:'Kod', cardNick:'Pseudonim', demo:'Wypróbuj demo', ambiguous:'kilka osób ma tę nazwę, użyj jednej z: {0}', pmBtn:'wiadomość prywatna', pmShort:'Wiad.', inRoom:'W pokoju', friends:'Znajomi', noFriends:'Jeszcze nikogo. Dodaj osoby do znajomych z ich karty w pokoju.', hereNow:'jest tutaj', lastSeen:'widziany(-a) {0}', agoNow:'przed chwilą', agoMin:'{0} min temu', agoHour:'{0} godz. temu', agoDay:'{0} dni temu', nameShort:'Nazwa', unfriend:'usuń ze znajomych', masterVol:'Głośność ogólna', changeName:'zmień', dupAcct:'to samo konto dwa razy (dwie karty?)', otherTabQ:'Aplikacja jest już w rozmowie w innej karcie tej przeglądarki. Karty jednej przeglądarki mają to samo konto, co myli innych.\n\nOK: dołącz z tymczasowym kontem w tej karcie (do testów, nic nie jest zapisywane)\nAnuluj: wróć i użyj drugiej karty', tempAcct:'tymczasowe konto dla tej karty, nic nie jest zapisywane', connIssue:'problem z połączeniem z {0}: {1}', silence:'wycisz u mnie', unsilence:'przywróć', hearShort:'Słuch', silenced:'wyciszony(-a) przez Ciebie', silencedMsg:'{0} jest u Ciebie wyciszony(-a)', unsilencedMsg:'{0} nie jest już u Ciebie wyciszony(-a)', soundBlocked:'Przeglądarka blokuje dźwięk. Kliknij tutaj, aby go włączyć.', noAudioIn:'nie dociera dźwięk', netAudio:'silnik audio: {0}, {1} Hz', audioRetry:'dźwięk do {0} nie ruszył, ponawiam ({1}/3)', notConnected:'brak połączenia z Tobą (widzi: {0})', connectingTo:'łączenie…', notConnectedDesc:'Inni w pokoju są połączeni z tą osobą, ale Twoje połączenie z nią jeszcze nie powstało. Próby trwają automatycznie.', notConnCount:'bez połączenia: {0}', waitMicShort:'czekam na mikrofon…', micSlow:'Przeglądarka wciąż czeka na zgodę na mikrofon. Kliknij ikonę mikrofonu lub kłódki w pasku adresu i zezwól. Możesz już słuchać i pisać.', notifyOpt:'Powiadomienia systemowe', notifyDesc:'Pokazuj powiadomienie systemowe, gdy ktoś Cię wspomni lub wyśle wiadomość prywatną, a ta karta jest w tle.', notifyDenied:'Przeglądarka zablokowała powiadomienia. Zezwól na nie przez ikonę kłódki w pasku adresu.', netMdns:'adresy lokalne są ukryte (mDNS), dopóki mikrofon nie jest dozwolony; połączenia w sieci lokalnej mogą zawodzić, jeśli sieć blokuje multicast', diagSignal:'błąd uzgadniania ({0}): {1}', diagIce:'próba połączenia nieudana \u00b7 moje: {0} \u00b7 ich: {1} \u00b7 pary: {2}', diagRecent:'ostatnie problemy z połączeniem:', none:'brak', pasteInvite:'Wklej zaproszenie', invite:'Zaproś', copyInviteLink:'Kopiuj link z zaproszeniem', noRooms:'Brak pokoi. Otwórz link z zaproszeniem, wklej zaproszenie lub utwórz nowy pokój.', pasteQ:'Wklej link lub kod zaproszenia:', inviteBad:'To nie jest prawidłowe zaproszenie.', inviteAdded:'Dodano pokój „{0}”. Wpisz swoje imię i kliknij Dołącz.', inviteCopied:'Skopiowano link z zaproszeniem. Wyślij go prywatnie: każdy z tym linkiem może wejść do pokoju.', inviteCodeCopied:'Skopiowano kod zaproszenia. Druga osoba wkleja go przyciskiem „Wklej zaproszenie” na ekranie dołączania. Wyślij go prywatnie.', demoRoom:'Pokój demo', chooseRoomQ:'Który pokój chcesz wysłać?', invBtn:'wyślij zaproszenie', invSent:'Wysłano zaproszenie do „{0}” dla {1}.', invRecv:'{0} zaprasza Cię do pokoju „{1}”.', invAdd:'dodaj pokój', invHave:'już dodany', invAdded:'Dodano pokój „{0}” do listy. Wyjdź z tego pokoju, aby do niego dołączyć.', dmBtn:'wiadomość', onlineNow:'online', dmOnline:'{0} jest online. Prywatny czat, szyfrowany end-to-end.', dmOffline:'{0} jest offline. Wiadomości czekają na tym urządzeniu i zostaną dostarczone, gdy oboje będziecie online.', dmDelivered:'dostarczono', dmWaiting:'czeka na dostarczenie', close:'zamknij', dmNoKey:'Spotkajcie się raz w pokoju po aktualizacji, wtedy czat prywatny zadziała', people:'Osoby', welcomeTitle:'Witaj', continue:'Dalej', pasteShort:'wklej', addShort:'+ nowy', call:'zadzwoń', inCall:'w rozmowie', homeHint:'Wybierz pokój po lewej, aby dołączyć do rozmowy głosowej, albo otwórz znajomego, aby do niego napisać.\nPierwszy raz? Otwórz link z zaproszeniem albo utwórz pokój przyciskiem + nowy i zaproś innych.', answer:'odbierz', decline:'odrzuć', changeName:'Zmień swoje imię', appName:'p2p voice', noVoice:'poza rozmową', voiceCall:'rozmowa \u00b7 {0}', voiceRoom:'głos \u00b7 {0} \u00b7 {1}', voiceShow:'Pokaż ten pokój', hangUp:'Rozłącz', leaveFirst:'Najpierw wyjdź z pokoju, potem go usuń.', switchQ:'Opuścić „{0}” i dołączyć do „{1}”?', statusShort:'Status', invSentShort:'zaproszenie do pokoju „{0}”', invRecvShort:'zaprasza Cię do pokoju „{0}”', invShort:'Pokój', callOffline:'{0} jest teraz offline.', ringText:'{0} dzwoni', callDeclined:'{0} odrzuca rozmowę.', callEnded:'{0} rozłącza się.', hereShort:'tutaj', done:'Gotowe', mainRoom:'Pokój główny', builtIn:'(wbudowany)', edit:'Edytuj', del:'Usuń', delConfirm:'Usunąć pokój „{0}”?',
+    path_p2p:'P2P', path_lan:'LAN', path_relay:'PRZEKAŹNIK', pathDesc_p2p:'Bezpośrednie połączenie przez internet', pathDesc_lan:'Bezpośrednie połączenie w sieci lokalnej', pathDesc_relay:'Przez serwer TURN, nadal szyfrowane end-to-end', netV6yes:'IPv6 dostępne, połączenia bezpośrednie z innymi urządzeniami IPv6 powinny działać', netV6local:'IPv6 tylko lokalnie, brak IPv6 w internecie', netV6no:'brak IPv6 w tej sieci', netSvcBad:'usługa TURN nie działa: {0}', netNoTurn:'brak skonfigurowanego TURN', bootTurn:'dane TURN ...', svcTitle:'Usługa TURN (Cloudflare Worker)', svcDesc:'Adres Workera, który wydaje dane logowania TURN. Zostaw puste, aby użyć adresu wbudowanego w ten plik.', turnIsOff:'wyłączony przez właściciela', turnNoSvc:'nie ustawiono adresu usługi TURN', turnNoAdmin:'brak klucza administratora w Ustawienia > Sieć', turnBadAdmin:'zły klucz administratora', turnStOff:'wyłączony', turnStOn:'włączony', turnStOnUntil:'włączony do {0}', turnRevoked:'unieważniono dane: {0}', turnRejoin:'Dołącz ponownie do pokoju, aby połączenia mogły z niego korzystać.', adminTitle:'Klucz administratora (tylko właściciel)', adminDesc:'Tylko na komputerze właściciela serwera TURN. Pozwala przełączać go poleceniami /turn on, /turn on 3 (godziny) i /turn off. Nigdy go nie udostępniaj.', adminPh:'klucz administratora', useRunning:'sprawdzanie zużycia TURN…', useMine:'to urządzenie, ta sesja: {0} przez przekaźnik', useMonth:'konto, {0}: wysłano {1}, odebrano {2}', use24:'ostatnie 24 h: {0}', useFree:'wykorzystano {0}% darmowych 1000 GB (liczone od wysłanych danych, statystyki mają kilka minut opóźnienia)', useBtn:'Pokaż zużycie TURN', moreNet:'Zaawansowane: serwer TURN', moreAcct:'Kopia zapasowa i reset', volShort:'Głośn.', akaShort:'Dawniej', cardAccount:'ID', cardConn:'Łącze', cardCode:'Kod', cardNick:'Pseudonim', demo:'Wypróbuj demo', ambiguous:'kilka osób ma tę nazwę, użyj jednej z: {0}', pmBtn:'wiadomość prywatna', pmShort:'Wiad.', inRoom:'W pokoju', friends:'Znajomi', noFriends:'Jeszcze nikogo. Dodaj osoby do znajomych z ich karty w pokoju.', hereNow:'jest tutaj', lastSeen:'widziany(-a) {0}', agoNow:'przed chwilą', agoMin:'{0} min temu', agoHour:'{0} godz. temu', agoDay:'{0} dni temu', nameShort:'Nazwa', unfriend:'usuń ze znajomych', masterVol:'Głośność ogólna', changeName:'zmień', dupAcct:'to samo konto dwa razy (dwie karty?)', otherTabQ:'Aplikacja jest już w rozmowie w innej karcie tej przeglądarki. Karty jednej przeglądarki mają to samo konto, co myli innych.\n\nOK: dołącz z tymczasowym kontem w tej karcie (do testów, nic nie jest zapisywane)\nAnuluj: wróć i użyj drugiej karty', tempAcct:'tymczasowe konto dla tej karty, nic nie jest zapisywane', connIssue:'problem z połączeniem z {0}: {1}', silence:'wycisz u mnie', unsilence:'przywróć', hearShort:'Słuch', silenced:'wyciszony(-a) przez Ciebie', silencedMsg:'{0} jest u Ciebie wyciszony(-a)', unsilencedMsg:'{0} nie jest już u Ciebie wyciszony(-a)', soundBlocked:'Przeglądarka blokuje dźwięk. Kliknij tutaj, aby go włączyć.', noAudioIn:'nie dociera dźwięk', netAudio:'silnik audio: {0}, {1} Hz', audioRetry:'dźwięk do {0} nie ruszył, ponawiam ({1}/3)', notConnected:'brak połączenia z Tobą (widzi: {0})', connectingTo:'łączenie…', notConnectedDesc:'Inni w pokoju są połączeni z tą osobą, ale Twoje połączenie z nią jeszcze nie powstało. Próby trwają automatycznie.', notConnCount:'bez połączenia: {0}', waitMicShort:'czekam na mikrofon…', micSlow:'Przeglądarka wciąż czeka na zgodę na mikrofon. Kliknij ikonę mikrofonu lub kłódki w pasku adresu i zezwól. Możesz już słuchać i pisać.', notifyOpt:'Powiadomienia systemowe', notifyDesc:'Pokazuj powiadomienie systemowe, gdy ktoś Cię wspomni lub wyśle wiadomość prywatną, a ta karta jest w tle.', notifyDenied:'Przeglądarka zablokowała powiadomienia. Zezwól na nie przez ikonę kłódki w pasku adresu.', netMdns:'adresy lokalne są ukryte (mDNS), dopóki mikrofon nie jest dozwolony; połączenia w sieci lokalnej mogą zawodzić, jeśli sieć blokuje multicast', diagSignal:'błąd uzgadniania ({0}): {1}', diagIce:'próba połączenia nieudana \u00b7 moje: {0} \u00b7 ich: {1} \u00b7 pary: {2}', diagRecent:'ostatnie problemy z połączeniem:', none:'brak', pasteInvite:'Wklej zaproszenie', invite:'Zaproś', copyInviteLink:'Kopiuj link z zaproszeniem', noRooms:'Brak pokoi. Otwórz link z zaproszeniem, wklej zaproszenie lub utwórz nowy pokój.', pasteQ:'Wklej link lub kod zaproszenia:', inviteBad:'To nie jest prawidłowe zaproszenie.', inviteAdded:'Dodano pokój „{0}”. Wpisz swoje imię i kliknij Dołącz.', inviteCopied:'Skopiowano link z zaproszeniem. Wyślij go prywatnie: każdy z tym linkiem może wejść do pokoju.', inviteCodeCopied:'Skopiowano kod zaproszenia. Druga osoba wkleja go przyciskiem „Wklej zaproszenie” na ekranie dołączania. Wyślij go prywatnie.', demoRoom:'Pokój demo', chooseRoomQ:'Który pokój chcesz wysłać?', invBtn:'wyślij zaproszenie', invSent:'Wysłano zaproszenie do „{0}” dla {1}.', invRecv:'{0} zaprasza Cię do pokoju „{1}”.', invAdd:'dodaj pokój', invHave:'już dodany', invAdded:'Dodano pokój „{0}” do listy. Wyjdź z tego pokoju, aby do niego dołączyć.', dmBtn:'wiadomość', onlineNow:'online', dmOnline:'{0} jest online. Prywatny czat, szyfrowany end-to-end.', dmOffline:'{0} jest offline. Wiadomości czekają na tym urządzeniu i zostaną dostarczone, gdy oboje będziecie online.', dmDelivered:'dostarczono', dmWaiting:'czeka na dostarczenie', close:'zamknij', dmNoKey:'Spotkajcie się raz w pokoju po aktualizacji, wtedy czat prywatny zadziała', people:'Osoby', welcomeTitle:'Witaj', continue:'Dalej', pasteShort:'wklej', addShort:'+ nowy', call:'zadzwoń', inCall:'w rozmowie', homeHint:'Otwórz pokój albo znajomego po lewej. Dołączanie do rozmowy i dzwonienie jest przyciskiem na dole.\nPierwszy raz? Otwórz link z zaproszeniem albo utwórz pokój przyciskiem + nowy i zaproś innych.', answer:'odbierz', decline:'odrzuć', changeName:'Zmień swoje imię', appName:'p2p voice', noVoice:'poza rozmową', voiceCall:'rozmowa \u00b7 {0}', voiceRoom:'głos \u00b7 {0} \u00b7 {1}', voiceShow:'Pokaż ten pokój', hangUp:'Rozłącz', callBtnTxt:'Zadzwoń', peopleFoldTip:'Pokaż lub ukryj, kto tu jest', ok:'OK', micDeadTip:'Brak mikrofonu. Kliknij, aby spróbować ponownie', joinVoice:'Dołącz', details:'Szczegóły', more:'Więcej', lockAct:'Zamknij: rozmawiam tylko ze znajomymi', unlockAct:'Otwórz pokój', acctShort:'ID', roomOffText:'Nie jesteś jeszcze w tym pokoju. Dołącz, aby rozmawiać i widzieć czat.', roomOffSwitch:'Dołączenie zakończy: {0}.', voiceHere:'tu jesteś na głosie', voiceTag:'głos', callTag:'rozmowa', leaveFirst:'Najpierw wyjdź z pokoju, potem go usuń.', switchQ:'Opuścić „{0}” i dołączyć do „{1}”?', statusShort:'Status', invSentShort:'zaproszenie do pokoju „{0}”', invRecvShort:'zaprasza Cię do pokoju „{0}”', invShort:'Pokój', callOffline:'{0} jest teraz offline.', ringText:'{0} dzwoni', callDeclined:'{0} odrzuca rozmowę.', callEnded:'{0} rozłącza się.', hereShort:'tutaj', done:'Gotowe', mainRoom:'Pokój główny', builtIn:'(wbudowany)', edit:'Edytuj', del:'Usuń', delConfirm:'Usunąć pokój „{0}”?',
     needRoomPw:'Identyfikator pokoju i hasło są wymagane', error:'Błąd', active:'{0} aktywny',
     nnFail:'Nie udało się tu uruchomić {0} ({1}). W Edge lub Chrome strona musi być w internecie, a nie otwarta jako plik.',
     default:'Domyślny', you:'(ty)', muted:'Wyciszony', inVoice:'Na kanale', talking:'Mówi', sending:'Nadaje', quiet:'Cisza', volume:'Głośność',
@@ -552,9 +696,11 @@ const LANG = {
   }
 };
 const t = (k, ...a) => (LANG[S.lang]?.[k] ?? LANG.en[k] ?? k).replace(/\{(\d)\}/g, (_, i) => a[i]);
-const THEMES = ['green', 'amber', 'cyan'];
+const MIC_ON = 'M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z';
+const MIC_OFF = 'M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z';
+const THEMES = ['normal', 'green', 'amber', 'cyan'];
 function applyLook(){
-  document.documentElement.dataset.theme = THEMES.includes(S.theme) ? S.theme : 'green';
+  document.documentElement.dataset.theme = THEMES.includes(S.theme) ? S.theme : 'normal';
   document.body.classList.toggle('simple', !!S.simple);
   document.querySelectorAll('.simpleChk').forEach(e => e.checked = !!S.simple);
   if ($('theme')) $('theme').value = S.theme;
@@ -567,7 +713,7 @@ function applyLang(){
   document.querySelectorAll('[data-tp]').forEach(e => e.placeholder = t(e.dataset.tp));
   document.querySelectorAll('[data-tt]').forEach(e => e.title = t(e.dataset.tt));
   document.querySelectorAll('.langSel').forEach(e => e.value = S.lang);
-  $('mute').lastElementChild.textContent = t(muted ? 'unmute' : 'mute');
+  if (typeof renderMic === 'function') renderMic();
   renderRooms(); applyLook(); if (typeof renderFriends === 'function') renderFriends(); if (typeof refreshLockBtn === 'function') refreshLockBtn();
   if (room) renderPeers();
   if (typeof renderView === 'function' && $('app').style.display) renderView();
@@ -578,6 +724,28 @@ document.querySelectorAll('.langSel').forEach(e => e.onchange = () => { S.lang =
 const allRooms = () => S.rooms;
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 const randKey = () => btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(24)))).replace(/[+/=]/g,'');
+// In-app dialogs (no browser pop-ups). ask() resolves to true/false, the typed text or null, or the chosen index.
+function ask({text, input = null, ok, cancel, danger = false, alertOnly = false, choices = null}){
+  return new Promise(res => {
+    const d = $('askDlg'), inp = $('askInput'), list = $('askList');
+    let fin = false; const done = v => { if (fin) return; fin = true; d.close(); res(v); };
+    $('askText').textContent = text;
+    inp.style.display = input === null ? 'none' : ''; inp.value = input ?? '';
+    list.innerHTML = '';
+    if (choices) choices.forEach((c, i) => { const b = document.createElement('button'); b.textContent = c; b.onclick = () => done(i); list.append(b); });
+    $('askOk').textContent = ok || t('ok'); $('askOk').className = danger ? 'danger' : 'primary'; $('askOk').style.display = choices ? 'none' : '';
+    $('askCancel').textContent = cancel || t('cancel'); $('askCancel').style.display = alertOnly ? 'none' : '';
+    const no = input !== null || choices ? null : false;
+    $('askOk').onclick = () => done(input !== null ? (alertOnly ? null : inp.value) : true);
+    $('askCancel').onclick = () => done(no);
+    d.oncancel = e => { e.preventDefault(); done(alertOnly ? null : no); };
+    inp.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); $('askOk').onclick(); } };
+    d.showModal(); if (input !== null) setTimeout(() => { inp.focus(); inp.select(); }, 0);
+  });
+}
+const uiAlert = text => ask({text, alertOnly:true});
+const uiConfirm = (text, danger) => ask({text, danger});
+const uiPrompt = (text, value = '') => ask({text, input:value});
 function btn(t, fn){ const b=document.createElement('button'); b.className='small'; b.textContent=t; b.onclick=fn; return b; }
 
 // Invites: room name and password, encoded after #join= in the link. The part after # never reaches the server.
@@ -607,7 +775,7 @@ function addInvite(inv){
 async function copyInvite(r, el){
   const link = inviteLink(r), text = link || inviteCode(r);
   let ok = true;
-  try { await navigator.clipboard.writeText(text); } catch { ok = false; prompt(t('copyThis'), text); }
+  try { await navigator.clipboard.writeText(text); } catch { ok = false; await ask({text:t('copyThis'), input:text, alertOnly:true}); }
   if (el && ok){ const old = el.textContent; el.textContent = t('copied'); setTimeout(() => el.textContent = old, 1500); }
   return {link, ok};
 }
@@ -622,9 +790,9 @@ function openRoom(r){
   $('roomDlg').showModal();
 }
 $('addRoom').onclick = () => openRoom(null);
-$('pasteInv').onclick = () => {
-  const v = prompt(t('pasteQ')); if (v === null) return;
-  const inv = parseInvite(v); if (!inv){ alert(t('inviteBad')); return; }
+$('pasteInv').onclick = async () => {
+  const v = await uiPrompt(t('pasteQ')); if (v === null) return;
+  const inv = parseInvite(v); if (!inv){ uiAlert(t('inviteBad')); return; }
   addInvite(inv);
 };
 $('rShow').onchange = () => { $('rp').type = $('rShow').checked ? 'text' : 'password'; };
@@ -632,12 +800,12 @@ $('rGen').onclick = () => { $('rp').value = randKey(); $('rShow').checked = true
 $('rCancel').onclick = () => $('roomDlg').close();
 $('rCopy').onclick = () => {
   const room = $('rr').value.trim(), pass = $('rp').value;
-  if (!room || !pass){ alert(t('needRoomPw')); return; }
+  if (!room || !pass){ uiAlert(t('needRoomPw')); return; }
   copyInvite({label: $('rl').value.trim() || room, room, pass}, $('rCopy'));
 };
 $('rSave').onclick = () => {
   const room = $('rr').value.trim(), pass = $('rp').value, label = $('rl').value.trim() || room;
-  if (!room || !pass){ alert(t('needRoomPw')); return; }
+  if (!room || !pass){ uiAlert(t('needRoomPw')); return; }
   if (editing) Object.assign(editing, {label, room, pass});
   else { const r = {id:newId(), label, room, pass}; S.rooms.push(r); S.selected = r.id; }
   save(); renderRooms(); $('roomDlg').close();
@@ -779,13 +947,13 @@ async function initAudio(){
 // Join works without a microphone: text chat and listening only
 let noMic = false, micPending = false, micPromise = null;
 async function tryMic(){
-  micPending = true; renderPeers();
+  micPending = true; renderPeers(); renderMic();
   const slow = setTimeout(() => { if (micPending) sys(t('micSlow')); }, 8000);
   try { await startMic(); if (noMic){ noMic = false; sys(t('micOk')); } }
   catch(e){ noMic = true; sys(t('noMic') + ' (' + (e?.message || e) + ')'); }
   clearTimeout(slow); micPending = false;
   sendStateAll();
-  renderPeers();
+  renderPeers(); renderMic();
 }
 
 function fallbackGate(){
@@ -1033,15 +1201,15 @@ function peerState(p){
 }
 
 // Send one of your rooms to someone in this room, over the encrypted connection
-function chooseRoom(){
+async function chooseRoom(){
   const list = allRooms(); if (!list.length) return null;
   if (list.length === 1) return list[0];
-  const v = prompt(t('chooseRoomQ') + '\n\n' + list.map((r, i) => (i + 1) + '. ' + r.label).join('\n'), '1');
-  const r = list[parseInt(v, 10) - 1]; return r || null;
+  const i = await ask({text:t('chooseRoomQ'), choices:list.map(r => r.label)});
+  return i === null ? null : list[i] || null;
 }
-function inviteTo(p, id){
+async function inviteTo(p, id){
   if (!p || p.gone || !allowed(p)) return;
-  const r = chooseRoom(); if (!r) return;
+  const r = await chooseRoom(); if (!r) return;
   sendInvite?.({l:r.label, r:r.room, p:r.pass}, id)?.then(() => sys(t('invSent', r.label, label(p)))).catch(e => sys(t('notSent') + (e?.message || e)));
 }
 function inviteLine(p, inv){
@@ -1101,7 +1269,7 @@ async function startDM(id){
       if (d?.ack){ const o = dmData(id); o.outbox = o.outbox.filter(m => m.mid !== d.ack); const m = o.msgs.find(m => m.mid === d.ack); if (m) m.ok = 1; save(); dmChanged(id); return; }
       if (d?.ring){ if (currentRoom?.call !== id) showRing(id); return; }
       if (d?.decline){ if (currentRoom?.call === id) sys(t('callDeclined', friendName(id))); return; }
-      if (d?.hang){ if (ringFrom === id) hideRing(); if (currentRoom?.call === id) sys(t('callEnded', friendName(id))); return; }
+      if (d?.hang){ if (ringFrom === id) hideRing(); if (currentRoom?.call === id && room){ sys(t('callEnded', friendName(id))); leaveVoice(); } return; }
       if ((typeof d?.t === 'string' || d?.inv) && d.mid){
         send({ack:d.mid}, pid).catch(() => {});
         const o = dmData(id);
@@ -1132,33 +1300,82 @@ function sendDM(id, text){
 }
 
 // Friend chat view: a card with the friend's details and actions, then the messages
-function renderDMLog(){
-  const id = activeConv; if (!isDM(id)) return;
-  const box = $('dmlog'), o = dmData(id), e = dms.get(id), c = S.contacts[id] || {};
-  o.unread = 0; save();
-  box.innerHTML = '';
+async function renameFriend(id){ const c = contact(id); const v = await uiPrompt(t('renameQ'), c.nick || ''); if (v === null) return; c.nick = v.trim().slice(0, 24); save(); renderView(); renderFriends(); if (room) renderPeers(); }
+async function unfriend(id){
+  if (!await uiConfirm(t('unverifyQ', friendName(id)), true)) return;
+  contact(id).verified = false; save(); stopDM(id); if (activeConv === id) setView('home'); else renderFriends(); if (room) refreshAccess();
+}
+function friendCard(id){
+  const e = dms.get(id), c = S.contacts[id] || {};
   const card = document.createElement('div'); card.className = 'fcard';
   const st = document.createElement('span'); st.className = e?.online ? 'badge ok' : ''; st.textContent = e?.online ? t('onlineNow') : t('lastSeen', ago(c.seen));
   card.append(kv(t('statusShort'), st));
+  if (c.nick) card.append(kv(t('nameShort'), c.name));
   const idRow = kv(t('cardAccount'), fmtId(id)); idRow.classList.add('adv'); card.append(idRow);
   if (c.code){ const r = kv(t('cardCode'), c.code); r.classList.add('adv'); card.append(r); }
-  if (c.nick) card.append(kv(t('nameShort'), c.name));
   if (c.names?.length){ const r = kv(t('akaShort'), c.names.join(', ')); r.classList.add('adv'); card.append(r); }
-  const acts = document.createElement('div'); acts.className = 'acts';
-  if (room && !currentRoom?.call) acts.append(btn(t('invBtn'), () => {
-    const r = chooseRoom(); if (!r) return;
-    const mid = 'i' + Date.now().toString(36);
-    o.msgs.push({me:1, t:t('invSentShort', r.label), ts:Date.now(), mid}); o.outbox.push({inv:{l:r.label, r:r.room, p:r.pass}, mid}); save(); flushDM(id); renderDMLog();
-  }));
-  acts.append(btn(t('rename'), () => { const v = prompt(t('renameQ'), c.nick || ''); if (v === null) return; contact(id).nick = v.trim().slice(0, 24); save(); renderView(); renderFriends(); if (room) renderPeers(); }));
-  acts.append(btn(t('unfriend'), () => {
-    if (!confirm(t('unverifyQ', friendName(id)))) return;
-    contact(id).verified = false; save(); stopDM(id); setView(room ? 'room' : 'home'); if (room) refreshAccess();
-  }));
-  card.append(acts); box.append(card);
-  const head = document.createElement('div'); head.className = 'sys line';
-  head.textContent = t(e?.online ? 'dmOnline' : 'dmOffline', friendName(id));
-  box.append(head);
+  return card;
+}
+function showFriendInfo(id){ $('infoTitle').textContent = friendName(id); $('infoBox').innerHTML = ''; $('infoBox').append(friendCard(id)); $('infoDlg').showModal(); }
+$('infoClose').onclick = () => $('infoDlg').close();
+
+// Small pop-up menu for the ⋮ buttons
+function closeMenu(){ $('menu').classList.remove('on'); }
+function openMenu(anchor, items){
+  const m = $('menu'); m.innerHTML = '';
+  for (const it of items){ if (!it) continue; const b = document.createElement('button'); b.textContent = it[0]; if (it[2]) b.className = it[2]; b.onclick = e => { e.stopPropagation(); closeMenu(); it[1](); }; m.append(b); }
+  m.classList.add('on');
+  const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8)) + 'px';
+  m.style.top = (r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4) + 'px';
+}
+document.addEventListener('click', e => { if (!$('menu').contains(e.target)) closeMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+let toastT = null;
+function toast(text){ const el = $('toast'); el.textContent = text; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 3500); }
+async function removeRoom(r){
+  if (liveRoom(r)){ uiAlert(t('leaveFirst')); return; }
+  if (!await uiConfirm(t('delConfirm', r.label), true)) return;
+  S.rooms = S.rooms.filter(x => x.id !== r.id); save();
+  if (activeConv === 'room' && viewRoom?.id === r.id) setView('home'); else renderRooms();
+}
+function roomMenu(r){
+  const live = liveRoom(r);
+  return [
+    live ? [t('leave'), leaveVoice, 'danger'] : [t('joinVoice'), () => switchVoice(r), 'go'],
+    [t('copyInviteLink'), async () => { const {link, ok} = await copyInvite(r); if (ok) toast(t(link ? 'inviteCopied' : 'inviteCodeCopied')); }],
+    live && room && !S.simple ? [t(isLocked() ? 'unlockAct' : 'lockAct'), () => setLock(!isLocked())] : null,
+    [t('edit'), () => openRoom(r)],
+    [t('del'), () => removeRoom(r), 'danger'],
+  ];
+}
+function friendMenu(id){
+  const inCall = !!room && currentRoom?.call === id;
+  return [
+    inCall ? [t('hangUp'), leaveVoice, 'danger'] : [t('callBtnTxt'), () => startCall(id), 'go'],
+    [t('details'), () => showFriendInfo(id)],
+    [t('rename'), () => renameFriend(id)],
+    [t('unfriend'), () => unfriend(id), 'danger'],
+  ];
+}
+function kebab(items){
+  const k = document.createElement('button'); k.className = 'small kebab'; k.innerHTML = '&#8942;'; k.title = t('more');
+  k.onclick = e => { e.stopPropagation(); if ($('menu').classList.contains('on')) return closeMenu(); openMenu(k, items()); };
+  return k;
+}
+$('headMenu').onclick = e => {
+  e.stopPropagation(); if ($('menu').classList.contains('on')) return closeMenu();
+  if (activeConv === 'room' && viewRoom) openMenu($('headMenu'), roomMenu(viewRoom));
+  else if (isDM(activeConv)) openMenu($('headMenu'), friendMenu(activeConv));
+};
+// Friend chat view: messages in the middle, the friend's card in the right column (inline on narrow screens)
+function renderDMLog(){
+  const id = activeConv; if (!isDM(id)) return;
+  const box = $('dmlog'), o = dmData(id);
+  o.unread = 0; save();
+  box.innerHTML = '';
+  const fp = $('friendBox'); fp.innerHTML = ''; fp.append(friendCard(id));
+  $('friendTitle').textContent = friendName(id);
   for (const m of o.msgs){
     const d = document.createElement('div'); d.className = 'line' + (m.inv ? ' pm' : '');
     const tm = document.createElement('span'); tm.className = 'gtime';
@@ -1187,7 +1404,7 @@ async function callRoomFor(id){
 }
 async function startCall(id){
   const e = dms.get(id);
-  if (!e?.online){ alert(t('callOffline', friendName(id))); return; }
+  if (!e?.online){ uiAlert(t('callOffline', friendName(id))); return; }
   const r = await callRoomFor(id);
   e.send({ring:1}, [...e.peerIds]).catch(() => {});
   switchVoice(r);
@@ -1202,7 +1419,12 @@ function showRing(id){
 function hideRing(){ $('ringBanner').classList.remove('on'); clearInterval(ringTimer); ringFrom = null; }
 $('ringYes').onclick = async () => { const id = ringFrom; hideRing(); if (id){ const r = await callRoomFor(id); switchVoice(r); } };
 $('ringNo').onclick = () => { const id = ringFrom; hideRing(); dms.get(id)?.send?.({decline:1}).catch(() => {}); };
-$('callBtn').onclick = () => { if (isDM(activeConv)) startCall(activeConv); };
+$('callBtn').onclick = () => {
+  const v = activeConv;
+  if (v === 'room' && viewRoom) return liveRoom(viewRoom) ? leaveVoice() : switchVoice(viewRoom);
+  if (isDM(v)) return room && currentRoom?.call === v ? leaveVoice() : startCall(v);
+  if (room || entering) leaveVoice();
+};
 
 // Friends in the left column: online dot, unread count; click opens the private chat
 function ago(ts){
@@ -1222,20 +1444,23 @@ function renderFriends(){
   const on = id => !!dms.get(id)?.online || here(id);
   list.sort((a, b) => (on(b[0]) - on(a[0])) || ((b[1].seen || 0) - (a[1].seen || 0)));
   for (const [id, c] of list){
-    const row = document.createElement('div'); row.className = 'navitem' + (activeConv === id ? ' sel' : '');
+    const inCall = !!room && currentRoom?.call === id;
+    const row = document.createElement('div'); row.className = 'navitem' + (inCall ? ' live' : '') + (activeConv === id ? ' sel' : '');
     const dot = document.createElement('span'); dot.className = 'dot' + (on(id) ? ' on' : '');
     const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.nick || c.name || '?';
     row.append(dot, nm);
     const un = S.dm?.[id]?.unread || 0, meta = document.createElement('span');
-    if (currentRoom?.call === id && room){ meta.className = 'meta live'; meta.textContent = '◉'; }
+    if (inCall){ Object.assign(meta, {className:'meta live vtag fold', textContent:t('callTag') + (S.peopleFold ? ' \u25b8' : ' \u25be'), title:t('peopleFoldTip'), onclick:ev => { ev.stopPropagation(); S.peopleFold = !S.peopleFold; save(); renderRooms(); renderFriends(); }}); row.firstChild.replaceWith(Object.assign(document.createElement('span'), {className:'ic live', innerHTML:SPK})); }
     else if (un){ meta.className = 'meta unread'; meta.textContent = '(' + un + ')'; }
     else if (here(id)){ meta.className = 'meta live'; meta.textContent = t('hereShort'); }
     else { meta.className = 'meta'; meta.textContent = on(id) ? '' : ago(c.seen); }
     row.append(meta);
     row.title = on(id) ? t('onlineNow') : t('lastSeen', ago(c.seen));
+    row.append(kebab(() => friendMenu(id)));
     row.onclick = () => setView(id);
     box.append(row);
   }
+  placePeople();
 }
 setInterval(renderFriends, 30000);
 
@@ -1243,15 +1468,41 @@ setInterval(renderFriends, 30000);
 // ===== Views: home | room | a friend's chat. Voice is separate: one room or one call at a time. =====
 let activeConv = 'home';
 const isDM = v => v !== 'home' && v !== 'room';
-function setView(v){
-  if (v === 'room' && !room) v = 'home';
+let viewRoom = null;
+const PEOPLE = document.getElementById('people');
+const phone = () => matchMedia('(max-width:700px)').matches;
+// The people in voice are listed under the room or friend you are talking with (folded with its tag).
+// Phones show them from the strip in the chat header instead, since the list is hidden while a chat is open.
+let phoneFold = false;   // phones: list under the room header, folded while typing
+function placePeople(){
+  const hold = $('peoplePanel');
+  if (phone()){
+    const here = !!room && ((activeConv === 'room' && liveRoom(viewRoom)) || (isDM(activeConv) && currentRoom?.call === activeConv));
+    if (here && !phoneFold) $('roomPeople').append(PEOPLE); else hold.append(PEOPLE);
+    $('peopleBtn').classList.toggle('on', here && !phoneFold);
+    $('peopleLbl').textContent = (livePeers() + 1) + (phoneFold ? ' \u25b8' : ' \u25be');
+    return;
+  }
+  const anchor = document.querySelector('#nav .navitem.live');
+  if (!anchor || S.peopleFold) hold.append(PEOPLE);
+  else if (anchor.nextSibling !== PEOPLE) anchor.after(PEOPLE);
+}
+function foldTag(text){
+  const m = document.createElement('span'); m.className = 'meta live vtag fold'; m.textContent = text + (S.peopleFold ? ' \u25b8' : ' \u25be');
+  m.title = t('peopleFoldTip');
+  m.onclick = e => { e.stopPropagation(); S.peopleFold = !S.peopleFold; save(); renderRooms(); renderFriends(); };
+  return m;
+}
+const liveRoom = r => !!r && !!currentRoom && !currentRoom.call && currentRoom.id === r.id && (!!room || entering);
+function setView(v, r){
+  if (v === 'room'){ viewRoom = r || viewRoom || (currentRoom?.call ? null : currentRoom); if (!viewRoom) v = 'home'; }
   activeConv = v; document.body.dataset.view = v === 'home' ? 'home' : v === 'room' ? 'room' : 'dm';
   if (isDM(v)){ dmData(v).unread = 0; save(); startDM(v); }
-  renderView(); renderRooms(); renderFriends(); setPeopleOpen(false);
-  if (v !== 'home') setTimeout(() => $('text').focus(), 0);
+  closeMenu(); renderView(); renderRooms(); renderFriends(); setPeopleOpen(false);
+  if (v !== 'home' && matchMedia('(hover:hover)').matches) setTimeout(() => { if ($('send').style.display !== 'none') $('text').focus(); }, 0);
 }
 const openConv = id => setView(id);
-const closeConv = id => { if (activeConv === id) setView(room ? 'room' : 'home'); };
+const closeConv = id => { if (activeConv === id) setView('home'); };
 function dmChanged(id){ if (activeConv === id) renderView(); renderFriends(); updateTitle(); }
 function updateTitle(){
   const n = Object.entries(S.dm || {}).reduce((a, [id, o]) => a + (S.contacts[id]?.verified ? o.unread || 0 : 0), 0);
@@ -1259,74 +1510,88 @@ function updateTitle(){
 }
 const renderConvs = updateTitle;   // kept for older call sites
 function renderView(){
-  const v = activeConv, dm = isDM(v);
+  const v = activeConv, dm = isDM(v), rv = v === 'room' && !!viewRoom, live = rv && liveRoom(viewRoom);
+  const callHere = dm && !!room && currentRoom?.call === v, here = (live && !!room) || callHere;
   $('home').style.display = v === 'home' ? '' : 'none';
-  $('log').style.display = v === 'room' ? '' : 'none';
+  $('roomOff').style.display = rv && !live ? 'flex' : 'none';
+  $('log').style.display = live ? '' : 'none';
   $('dmlog').style.display = dm ? '' : 'none';
-  $('send').style.display = v === 'home' ? 'none' : '';
-  $('inviteBtn').style.display = v === 'room' && !currentRoom?.call ? '' : 'none';
-  $('lockBtn').style.display = v === 'room' && !currentRoom?.call ? '' : 'none';
-  $('callBtn').style.display = dm ? '' : 'none';
-  $('status').style.display = v === 'room' ? '' : 'none';
-  $('title').textContent = v === 'room' ? (currentRoom?.label || '') : dm ? '@ ' + friendName(v) : t('appName');
-  if (dm){
-    const inCall = currentRoom?.call === v;
-    $('callBtn').textContent = t(inCall ? 'inCall' : 'call'); $('callBtn').disabled = inCall;
-    renderDMLog();
+  $('send').style.display = live || dm ? '' : 'none';
+  $('headMenu').style.display = v === 'home' ? 'none' : '';
+  $('status').style.display = live ? '' : 'none';
+  $('title').textContent = rv ? viewRoom.label : dm ? '@ ' + friendName(v) : t('appName');
+  $('liveTag').classList.toggle('on', here); $('liveTxt').textContent = t('voiceHere');
+  document.body.classList.toggle('callHere', callHere);
+  $('app').classList.toggle('noside', !dm);
+  $('peopleBtn').hidden = !(live || callHere);
+  if (rv && !live){
+    $('offTitle').textContent = viewRoom.label;
+    $('offText').textContent = t('roomOffText') + (room || entering ? '\n' + t('roomOffSwitch', currentRoom?.call ? friendName(currentRoom.call) : currentRoom?.label || '') : '');
   }
-  renderVoice(); updateTitle();
+  // bottom button: join or call what is open, or leave the voice you are in
+  const b = $('callBtn'); let mode = null;
+  if (rv) mode = live ? (room || entering ? 'leave' : null) : 'join';
+  else if (dm) mode = callHere ? 'hang' : 'call';
+  else if (room || entering) mode = currentRoom?.call ? 'hang' : 'leave';
+  b.hidden = !mode;
+  if (mode){
+    const end = mode === 'leave' || mode === 'hang';
+    b.className = end ? 'danger' : 'join';
+    b.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + (end ? HANG_PATH : PHONE_PATH) + '"/></svg>';
+    b.append(t({leave:'leave', hang:'hangUp', join:'joinVoice', call:'callBtnTxt'}[mode]));
+  }
+  if (dm) renderDMLog();
+  renderVoice(); updateTitle(); placePeople();
 }
+$('offJoin').onclick = () => { if (viewRoom) switchVoice(viewRoom); };
 // Voice panel in the bottom bar
+const PHONE_PATH = 'M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z';
+const HANG_PATH = 'M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.8 1.1-2.6 1.8-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.3 8.8 7.5 7 12 7s8.7 1.8 11.7 4.7a1 1 0 0 1 0 1.4l-2.5 2.4c-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3-.8-.7-1.6-1.3-2.6-1.8-.4-.2-.6-.5-.6-.9V9.7C15.1 9.3 13.6 9 12 9z';
+const SPK = '<svg class="spk" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>';
 function renderVoice(){
   const on = !!room;
   $('app').classList.toggle('noroom', !on);
   $('voice').classList.toggle('on', on);
   $('voiceTxt').textContent = !on ? t('noVoice') : currentRoom?.call ? t('voiceCall', friendName(currentRoom.call)) : t('voiceRoom', currentRoom?.label || '', livePeers() + 1);
   $('voice').title = on ? t('voiceShow') : '';
-  $('leaveLbl').textContent = t(currentRoom?.call ? 'hangUp' : 'leave');
-  $('meName').textContent = S.name;
+  renderMic();
+  $('meName').textContent = S.name; $('meAv').textContent = (S.name || '?').trim().charAt(0).toUpperCase() || '?';
 }
-$('voice').onclick = () => { if (room) setView('room'); };
+$('voice').onclick = () => { if (!currentRoom || !(room || entering)) return; if (currentRoom.call) setView(currentRoom.call); else setView('room', currentRoom); };
 $('backBtn').onclick = () => setView('home');
 $('meBtn').onclick = () => askMyName();
 
-// Rooms in the left column. Clicking one joins its voice (or shows it, if you are already there).
+// Rooms in the left column. Clicking one opens it; joining its voice is a separate button.
 function renderRooms(){
   const box = $('rooms'); if (!box) return; box.innerHTML = '';
   if (!allRooms().length){ const n = document.createElement('div'); n.className = 'navempty'; n.textContent = t('noRooms'); box.append(n); }
   for (const r of allRooms()){
-    const live = !!room && currentRoom?.id === r.id;
-    const row = document.createElement('div'); row.className = 'navitem' + (live && activeConv === 'room' ? ' sel' : '');
-    const ic = document.createElement('span'); ic.className = 'ic' + (live ? ' live' : ''); ic.textContent = live ? '◉' : '#';
+    const live = liveRoom(r);
+    const row = document.createElement('div'); row.className = 'navitem' + (live ? ' live' : '') + (activeConv === 'room' && viewRoom?.id === r.id ? ' sel' : '');
+    const ic = document.createElement('span'); ic.className = 'ic' + (live ? ' live' : ''); if (live) ic.innerHTML = SPK; else ic.textContent = '#';
     const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = r.label;
     row.append(ic, nm);
-    if (live){ const m = document.createElement('span'); m.className = 'meta live'; m.textContent = livePeers() + 1; row.append(m); }
-    const acts = document.createElement('span'); acts.className = 'acts';
-    acts.append(btn('✎', e => { e.stopPropagation(); openRoom(r); }), btn('×', e => {
-      e.stopPropagation();
-      if (live){ alert(t('leaveFirst')); return; }
-      if (!confirm(t('delConfirm', r.label))) return;
-      S.rooms = S.rooms.filter(x => x.id !== r.id); save(); renderRooms();
-    }));
-    acts.firstChild.title = t('edit'); acts.lastChild.title = t('del');
-    row.append(acts);
-    row.onclick = () => live ? setView('room') : switchVoice(r);
+    if (live) row.append(foldTag(t('voiceTag') + ' ' + (livePeers() + 1)));
+    row.append(kebab(() => roomMenu(r)));
+    row.onclick = () => setView('room', r);
     box.append(row);
   }
+  placePeople();
 }
 
+const keepView = () => { S.resumeView = activeConv === 'room' ? 'room:' + (viewRoom?.id || '') : activeConv; };
 // Joining, switching and leaving voice. Switching reloads the page so no old connection lingers.
 let entering = false;
-function switchVoice(r){
+async function switchVoice(r){
   if (!room) return enterRoom(r);
-  if (currentRoom?.id === r.id) return setView('room');
-  if (!confirm(t('switchQ', currentRoom.label, r.label))) return;
-  S.autoJoin = {id:r.id, label:r.label, room:r.room, pass:r.pass, call:r.call || null}; save();
+  if (currentRoom?.id === r.id) return r.call ? setView(r.call) : setView('room', r);
+  if (!await uiConfirm(t('switchQ', currentRoom.call ? friendName(currentRoom.call) : currentRoom.label, r.call ? friendName(r.call) : r.label))) return;
+  S.autoJoin = {id:r.id, label:r.label, room:r.room, pass:r.pass, call:r.call || null}; keepView(); save();
   bye(); beep('disconnect'); setTimeout(() => location.reload(), 300);
 }
 function leaveVoice(){
   if (currentRoom?.call) dms.get(currentRoom.call)?.send?.({hang:1}).catch(() => {});
-  S.autoJoin = null; save(); bye(); beep('disconnect');
+  S.autoJoin = null; keepView(); save(); bye(); beep('disconnect');
   setTimeout(() => { room?.leave(); raw?.getTracks().forEach(tr => tr.stop()); location.reload(); }, 300);
 }
 
@@ -1339,7 +1604,7 @@ function setMyName(n){
   if (room || peers.size){ renderPeers(); sys(t('nickSet', n)); }
   return true;
 }
-function askMyName(){ const v = prompt(t('yourName'), S.name); if (v !== null) setMyName(v); }
+async function askMyName(){ const v = await uiPrompt(t('yourName'), S.name); if (v !== null) setMyName(v); }
 function kv(label, ...vals){
   const r = document.createElement('div'); r.className = 'kv';
   const k = document.createElement('div'); k.className = 'k'; k.textContent = label;
@@ -1417,9 +1682,9 @@ function personRow(name, status, p){
       if (c?.names?.length){ const r = kv(t('akaShort'), c.names.join(', ')); r.classList.add('adv'); card.append(r); }
       if (p.acct){
         const b = document.createElement('button'); b.className = 'small'; b.textContent = t('rename');
-        b.onclick = e => {
+        b.onclick = async e => {
           e.stopPropagation();
-          const val = prompt(t('renameQ'), contact(p.acct).nick || ''); if (val === null) return;
+          const val = await uiPrompt(t('renameQ'), contact(p.acct).nick || ''); if (val === null) return;
           contact(p.acct).nick = val.trim().slice(0, 24); save(); renderPeers();
         };
         const r = kv(t('cardNick'), (c?.nick || '—') + ' ', b); r.classList.add('adv'); card.append(r);
@@ -1427,7 +1692,7 @@ function personRow(name, status, p){
     }
     wrap.append(card);
   }
-  return {el: wrap, av, st, lvl: lvl.firstChild};
+  return {el: wrap, av, st, lvl: av};
 }
 
 // Mute someone for yourself only. Remembered per account, so it stays after reconnects and name changes.
@@ -1445,7 +1710,7 @@ function statusText(p){
   if (!allowed(p)) return t('blocked');
   if (p.lockedOut) return t('lockedYou');
   if (p.dupe && [...peers.values()].some(o => o !== p && !o.gone && o.acct === p.acct)) return t('dupAcct');
-  return t(p.noMic ? 'noMicShort' : p.muted ? 'muted' : 'inVoice');
+  return p.noMic ? t('noMicShort') : p.muted ? t('muted') : '';
 }
 // Roster exchange: everyone regularly tells their peers which accounts they are connected to.
 // Someone others are connected to but you are not then shows up as "not connected to you".
@@ -1489,8 +1754,8 @@ function ghostRow(e){
 }
 
 function renderPeers(){
-  const box = $('people'); box.innerHTML = '';
-  const me = personRow(S.name + ' ' + t('you'), t(micPending ? 'waitMicShort' : noMic ? 'noMicShort' : muted ? 'muted' : 'inVoice'), null);
+  const box = PEOPLE; box.innerHTML = '';
+  const me = personRow(S.name + ' ' + t('you'), (micPending ? t('waitMicShort') : noMic ? t('noMicShort') : muted ? t('muted') : ''), null);
   selfAv = me.av; selfSt = me.st; selfLvl = me.lvl; box.append(me.el);
   for (const [, p] of peers){
     const r = personRow(disp(p), statusText(p), p);
@@ -1501,7 +1766,11 @@ function renderPeers(){
   const un = unreached();
   for (const e of un) box.append(ghostRow(e));
   $('count').textContent = t('inVoiceCount', livePeers() + 1) + (un.length ? ' \u00b7 ' + t('notConnCount', un.length) : '');
-  $('peopleLbl').textContent = t('people') + ' ' + (livePeers() + 1) + (un.length ? '!' : '');
+  $('peopleLbl').textContent = (livePeers() + 1) + (un.length ? '!' : ''); placePeople();
+  const mini = $('minis'); mini.innerHTML = '';
+  const addMini = (name, av) => { const m = document.createElement('span'); m.className = 'av'; m.textContent = (name || '?').charAt(0).toUpperCase(); if (av) av.mini = m; mini.append(m); };
+  addMini(S.name, selfAv);
+  for (const [, p] of peers) if (!p.gone && mini.children.length < 5) addMini(disp(p), p.av);
   renderVoice(); renderRooms(); renderFriends();
   if ($('dlg').open) renderContacts();
   renderFriends();
@@ -1509,8 +1778,8 @@ function renderPeers(){
 const livePeers = () => [...peers.values()].filter(p => !p.gone).length;
 
 function setTalk(av, st, talking, isMuted){
-  av?.classList.toggle('talk', talking);
-  if (st){ st.classList.toggle('talk', talking); st.textContent = t(isMuted ? 'muted' : talking ? 'talking' : 'inVoice'); }
+  av?.classList.toggle('talk', talking); av?.mini?.classList.toggle('talk', talking);
+  if (st){ st.classList.toggle('mut', !!isMuted); st.textContent = isMuted ? t('muted') : ''; }
 }
 function rms(an, buf){ an.getFloatTimeDomainData(buf); let s=0; for (const v of buf) s+=v*v; return 10*Math.log10(s/buf.length+1e-12); }
 setInterval(() => {
@@ -1518,15 +1787,15 @@ setInterval(() => {
   if (micPending){ if (selfSt) selfSt.textContent = t('waitMicShort'); }
   else if (noMic){ if (selfSt) selfSt.textContent = t('noMicShort'); }
   else setTalk(selfAv, selfSt, !muted && sending, muted);
-  if (selfLvl) selfLvl.style.width = pct(myDb) + '%';
+  if (selfLvl) selfLvl.style.setProperty('--lvp', pct(myDb) + '%');
   for (const [, p] of peers){
     if (p.gone) continue;
     const db = p.an ? rms(p.an, p.buf) : p.fake ? p.fake() : -100;
-    if (!allowed(p) || p.lockedOut || p.noMic){ if (p.st) p.st.textContent = statusText(p); if (p.lvl) p.lvl.style.width = '0%'; continue; }
+    if (!allowed(p) || p.lockedOut || p.noMic){ if (p.st) p.st.textContent = statusText(p); if (p.lvl) p.lvl.style.setProperty('--lvp', '0%'); continue; }
     setTalk(p.av, p.st, !p.muted && db > -55, p.muted);
     if (isSilenced(p) && p.st){ p.st.textContent = t('silenced'); p.st.classList.add('lock'); }
     if (p.dupe && p.st && statusText(p) === t('dupAcct')){ p.st.textContent = t('dupAcct'); p.st.classList.add('lock'); }
-    if (p.lvl) p.lvl.style.width = (p.muted ? 0 : pct(db)) + '%';
+    if (p.lvl) p.lvl.style.setProperty('--lvp', (p.muted ? 0 : pct(db)) + '%');
   }
 }, 80);
 
@@ -1637,10 +1906,10 @@ function setLock(on){
   if (on) S.locks[currentRoom.id] = true; else delete S.locks[currentRoom.id];
   save(); sys(t(on ? 'lockOn' : 'lockOff')); refreshAccess();
 }
-function verifyPeer(p){
+async function verifyPeer(p){
   const ct = contact(p.acct);
-  if (ct.verified){ if (confirm(t('unverifyQ', disp(p)))){ ct.verified = false; save(); stopDM(p.acct); closeConv(p.acct); refreshAccess(); } return; }
-  if (confirm(t('verifyQ', disp(p), p.code))){ ct.verified = true; save(); startDM(p.acct); refreshAccess(); }
+  if (ct.verified){ if (await uiConfirm(t('unverifyQ', disp(p)), true)){ ct.verified = false; save(); stopDM(p.acct); closeConv(p.acct); refreshAccess(); } return; }
+  if (await uiConfirm(t('verifyQ', disp(p), p.code))){ ct.verified = true; save(); startDM(p.acct); refreshAccess(); }
 }
 
 // Adds a peer the first time anything arrives from it, so a missed join event cannot hide someone
@@ -1963,11 +2232,11 @@ function renderContacts(){
     const nm = document.createElement('span'); nm.textContent = (c.verified ? '✓ ' : '') + (c.nick || c.name || '?');
     if (c.verified) nm.style.color = 'var(--fg)';
     const btns = document.createElement('span'); btns.className = 'row'; btns.style.gap = '6px';
-    btns.append(btn(t('rename'), () => {
-      const v = prompt(t('renameQ'), c.nick || ''); if (v === null) return;
+    btns.append(btn(t('rename'), async () => {
+      const v = await uiPrompt(t('renameQ'), c.nick || ''); if (v === null) return;
       c.nick = v.trim().slice(0, 24); save(); renderContacts(); if (room) renderPeers();
-    }), btn(t('forget'), () => {
-      if (!confirm(t('forgetQ', c.nick || c.name))) return;
+    }), btn(t('forget'), async () => {
+      if (!await uiConfirm(t('forgetQ', c.nick || c.name), true)) return;
       delete S.contacts[id]; save(); renderContacts(); if (room) renderPeers();
     }));
     top.append(nm, btns);
@@ -1992,26 +2261,37 @@ $('ver').textContent = 'v' + APP_VERSION;
 $('myNameSave').onclick = () => { if (setMyName($('myName').value)) { $('myNameSave').textContent = '\u2713'; setTimeout(() => $('myNameSave').textContent = t('save'), 1200); } };
 $('myName').onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); $('myNameSave').click(); } };
 $('soundBanner').onclick = unblockSound;
-$('inviteBtn').onclick = async () => {
-  if (!currentRoom || currentRoom.demo) return;
-  const {link, ok} = await copyInvite(currentRoom, $('inviteBtn'));
+async function copyCurrentInvite(){
+  if (!currentRoom || currentRoom.call) return;
+  const {link, ok} = await copyInvite(currentRoom);
   if (ok) sys(t(link ? 'inviteCopied' : 'inviteCodeCopied'));
-};
+}
 // Phones: People button opens the participant list as a panel
+let peopleTimer = null;
+const wide = () => matchMedia('(min-width:1001px)').matches;
 function setPeopleOpen(on){
+  clearTimeout(peopleTimer);
+  if (!phone()) on = false;
   document.body.classList.toggle('peopleOpen', on); $('peopleBtn').classList.toggle('on', on);
+  if (on) peopleTimer = setTimeout(() => setPeopleOpen(false), 12000);
   document.documentElement.style.setProperty('--barH', $('bar').offsetHeight + 'px');
 }
-$('peopleBtn').onclick = () => setPeopleOpen(!document.body.classList.contains('peopleOpen'));
+$('peopleBtn').onclick = e => { e.stopPropagation(); phoneFold = !phoneFold; placePeople(); };
+$('text').addEventListener('focus', () => { if (phone() && !phoneFold){ phoneFold = true; placePeople(); } });
+addEventListener('resize', () => placePeople());
+document.addEventListener('pointerdown', e => { if (document.body.classList.contains('peopleOpen') && !$('side').contains(e.target) && !$('peopleBtn').contains(e.target)) setPeopleOpen(false); });
+$('text').addEventListener('focus', () => { if (document.body.classList.contains('peopleOpen')) setPeopleOpen(false); });
+$('side').addEventListener('pointerdown', () => { clearTimeout(peopleTimer); peopleTimer = setTimeout(() => setPeopleOpen(false), 12000); });
 // Master volume: scales everyone at once, e.g. against game audio. Click the speaker to mute all.
 let masterPrev = 100;
 function setMaster(v){
   S.master = Math.max(0, Math.min(100, Math.round(v))); save();
-  $('masterVol').value = S.master; $('masterV').textContent = S.master + '%';
+  $('masterVol').value = S.master; $('masterV').textContent = S.master + '%'; $('masterVol2').value = S.master; $('masterV2').textContent = S.master + '%';
   $('master').title = t('masterVol');
   for (const [, p] of peers) applyPeerVol(p);
 }
 $('masterVol').oninput = () => setMaster(+$('masterVol').value);
+$('masterVol2').oninput = () => setMaster(+$('masterVol2').value);
 $('masterVol').ondblclick = () => setMaster(100);
 $('master').querySelector('svg').onclick = () => { if (S.master > 0){ masterPrev = S.master; setMaster(0); } else setMaster(masterPrev || 100); };
 setMaster(S.master ?? 100);
@@ -2038,10 +2318,10 @@ async function enterRoom(r){
   if (entering || room || !r) return;
   entering = true;
   if (!tempTab && await otherTabActive()){
-    if (!confirm(t('otherTabQ'))){ entering = false; return; }
+    if (!await uiConfirm(t('otherTabQ'))){ entering = false; return; }
     await useTempAccount();
   }
-  currentRoom = r; $('log').innerHTML = ''; setView('home'); $('title').textContent = r.label; refreshLockBtn();
+  currentRoom = r; $('log').innerHTML = ''; if (r.call) setView(r.call); else setView('room', r); refreshLockBtn();
   const step = S.simple ? () => {} : boot;
   if (S.simple) sys(t('connecting')); else step('p2p voice v' + APP_VERSION + ' :: init');
   // If the microphone is already allowed, wait briefly for it before connecting: Chrome and Edge only
@@ -2061,7 +2341,7 @@ async function enterRoom(r){
   if (ice) step(t('bootTurn') + ' ok'); else if (iceErr === t('turnIsOff')) step(t('bootTurn') + ' off (' + iceErr + ')'); else if (iceErr) step(t('bootTurn') + ' FAIL (' + iceErr + ')');
   step(t('bootKey') + ' ok');
   await join(r, secret, ice);
-  entering = false; setView('room'); beep('connect');
+  entering = false; renderView(); renderRooms(); renderFriends(); beep('connect');
   inRoomTab = true;
   startAllDMs(); renderConvs();
   step(t('bootRelays', RELAYS.length));
@@ -2080,9 +2360,12 @@ function startApp(){
   $('welcome').style.display = 'none'; $('app').style.display = 'grid';
   setView('home');
   loadAccount().then(() => startAllDMs()).catch(e => console.warn('account', e));
-  const pend = pendingInviteRoom || S.autoJoin;
-  if (S.autoJoin){ S.autoJoin = null; save(); }
-  if (pend) enterRoom(pend);
+  // a voice switch reloads the page and continues here; an invite link only opens the room
+  const auto = S.autoJoin, rv = S.resumeView; S.resumeView = null; save();
+  if (rv?.startsWith('room:')){ const r = S.rooms.find(x => x.id === rv.slice(5)); if (r) setView('room', r); }
+  else if (rv && rv !== 'home' && S.contacts[rv]?.verified) setView(rv);
+  if (auto){ S.autoJoin = null; save(); enterRoom(auto); }
+  else if (pendingInviteRoom) setView('room', pendingInviteRoom);
 }
 $('go').onclick = () => {
   S.name = $('name').value.trim() || t('anon'); save();
@@ -2147,7 +2430,7 @@ function command(txt){
       }
       break;
     case 'invite': {
-      if (!arg){ $('inviteBtn').click(); break; }
+      if (!arg){ copyCurrentInvite(); break; }
       const m = whoIs(arg); if (!m) break;
       inviteTo(m.p, m.id); break;
     }
@@ -2200,8 +2483,8 @@ function sendText(){
 }
 
 // Panic: wipes everything this page stored in the browser and leaves
-function panic(){
-  if (!confirm(t('panicQ'))) return;
+async function panic(){
+  if (!await uiConfirm(t('panicQ'), true)) return;
   bye(); wiped = true;
   try { localStorage.removeItem('p2pchat'); localStorage.removeItem('p2pchat-key'); } catch {}
   try { indexedDB.deleteDatabase('p2pchat'); } catch {}
@@ -2215,16 +2498,22 @@ $('text').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); sendText(); }
 });
 
+// Microphone button next to the profile: red and crossed out = no microphone (click retries), yellow = muted
+function renderMic(){
+  const b = $('mute'); if (!b) return;
+  const inVoice = !!room || entering, dead = inVoice && noMic && !micPending, wait = inVoice && micPending;
+  b.className = dead ? 'dead' : muted ? 'off' : wait ? 'wait' : inVoice ? '' : 'idle';
+  $('micPath').setAttribute('d', dead || muted ? MIC_OFF : MIC_ON);
+  b.title = t(dead ? 'micDeadTip' : wait ? 'waitMicShort' : muted ? 'unmute' : 'mute');
+}
 $('mute').onclick = () => {
+  if ((room || entering) && noMic && !micPending){ micPromise = tryMic(); renderMic(); return; }
   muted = !muted; applyGraph(); sendStateAll(); beep(muted ? 'mute' : 'unmute');
-  $('mute').lastElementChild.textContent = t(muted ? 'unmute' : 'mute');
-  $('mute').classList.toggle('off', muted);
-  renderPeers();
+  renderMic(); if (room) renderPeers();
 };
 
 function bye(){ try { sendState?.({bye:true}); } catch {} }
 window.addEventListener('pagehide', bye);
-$('leave').onclick = () => leaveVoice();
 
 // Settings dialog
 function syncSettingsUI(){
@@ -2257,22 +2546,21 @@ $('notifyChk').onchange = async () => {
   S.notify = $('notifyChk').checked;
   if (S.notify && 'Notification' in window && Notification.permission !== 'granted'){
     let res = 'denied'; try { res = await Notification.requestPermission(); } catch {}
-    if (res !== 'granted'){ S.notify = false; $('notifyChk').checked = false; alert(t('notifyDenied')); }
+    if (res !== 'granted'){ S.notify = false; $('notifyChk').checked = false; uiAlert(t('notifyDenied')); }
   }
   save();
 };
-$('lockBtn').onclick = () => setLock(!isLocked());
 $('impFile').onchange = async () => {
   const f = $('impFile').files[0]; $('impFile').value = ''; if (!f) return;
   try {
     const d = JSON.parse(await f.text());
     if (d?.type !== 'p2p-chat-account' || !d.key?.d) throw 0;
     await accountFromJwk(d.key);
-    if (!confirm(t('importQ'))) return;
+    if (!await uiConfirm(t('importQ'))) return;
     localStorage.setItem('p2pchat-key', JSON.stringify(d.key));
     S.contacts = {...(d.contacts || {}), ...S.contacts}; if (d.name) S.name = d.name; save();
     bye(); location.reload();
-  } catch { alert(t('importBad')); }
+  } catch { uiAlert(t('importBad')); }
 };
 $('closeSet').onclick = () => $('dlg').close();
 
