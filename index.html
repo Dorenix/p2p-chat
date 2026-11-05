@@ -152,7 +152,7 @@ dialog h3::before{content:"# "}
 #app{display:none;flex:1;min-height:0;grid-template-columns:280px minmax(0,1fr) 260px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"prof main side" "nav main side" "bar bar bar"}
 #app.noside{grid-template-columns:280px minmax(0,1fr);grid-template-areas:"prof main" "nav main" "bar bar"}
 #app.noside #side{display:none}
-#prof{grid-area:prof;display:flex;align-items:center;gap:6px;background:var(--panel);border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px}
+#prof{grid-area:prof;display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:var(--panel);border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px}
 .pmeta{flex:1}
 .mebtn{display:block !important;max-width:100%;overflow:hidden;border:0 !important;background:transparent !important;padding:0 2px !important;text-transform:none !important;letter-spacing:0 !important;text-align:left;color:var(--fg) !important;box-shadow:none !important}
 .mebtn:hover{background:var(--panel2) !important}
@@ -222,7 +222,7 @@ dialog h3::before{content:"# "}
 #bar{grid-area:bar;display:flex;align-items:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
 #bar button{display:flex;align-items:center;gap:6px;font-size:11px;padding:7px 10px}
 #bar svg{width:16px;height:16px;fill:currentColor;flex:none}
-#voice{display:flex;align-items:center;gap:6px;padding:0 2px;font-size:12px;color:var(--dim);min-width:0;cursor:default}
+#voice{order:9;flex:1 1 100%;display:flex;align-items:center;gap:6px;padding:0 0 2px 8px;margin-top:-2px;font-size:12px;color:var(--dim);min-width:0;cursor:default}
 #voice.on{cursor:pointer}
 #voice.on:hover span:last-child{text-decoration:underline}
 #voice:not(.on){display:none}
@@ -243,7 +243,7 @@ body.volOpen #volBtn{color:var(--accent)}
 #volBtn svg{width:19px;height:19px;fill:currentColor}
 #bar{min-height:54px}
 #callBtn{padding:7px 14px !important}
-#bar:not(:has(#callBtn:not([hidden]))){display:none}
+#bar:has(#callBtn[hidden]){display:none}
 #master svg{width:16px;height:16px;fill:var(--dim);flex:none;cursor:pointer}
 #master input{flex:1;padding:0}
 #master span{font-size:12px;color:var(--dim);width:38px;text-align:right}
@@ -264,10 +264,13 @@ body.volOpen #volBtn{color:var(--accent)}
 #headCall.join{border-color:var(--voice);color:var(--voice)}
 [data-theme=normal] #headCall.join{background:var(--voice);color:#fff}
 #voiceTxt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-#voiceEnd{flex:none;margin-left:2px;padding:0 3px !important;border-color:transparent !important;background:transparent !important;display:inline-flex;align-items:center}
-#voiceEnd svg{width:13px;height:13px;fill:currentColor}
+#voiceEnd{flex:none;width:34px;height:34px;padding:0 !important;border-radius:50%;display:flex;justify-content:center;align-items:center}
+#voiceEnd[hidden]{display:none !important}
+#voiceEnd svg{width:18px;height:18px;fill:currentColor}
+[data-theme=normal] #voiceEnd{background:var(--bad);border-color:var(--bad);color:#fff}
+[data-theme=normal] #voiceEnd:hover{background:#d93b40}
 @media (min-width:701px){ #bar{display:none !important} }
-@media (max-width:700px){ #headCall,#voiceEnd{display:none !important} }
+@media (max-width:700px){ #headCall{display:none !important} }
 /* Incoming call */
 #ringBanner{display:none;position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:40;background:var(--panel);border:1px solid var(--fg);box-shadow:0 0 24px rgba(var(--g),.35);padding:10px 14px;align-items:center;gap:10px;max-width:calc(100% - 24px)}
 #ringBanner.on{display:flex}
@@ -420,7 +423,7 @@ body.simple .adv{display:none !important}
 <div id="ringBanner"><span id="ringText"></span><button class="small" id="ringYes" data-t="answer"></button><button class="small danger" id="ringNo" data-t="decline"></button></div>
 
 <div id="app" class="noroom noside">
-  <header id="prof"><span id="meAvW"><span class="av" id="meAv"></span><i id="presence"></i></span><div class="pmeta"><button id="meBtn" class="mebtn" data-tt="changeName"><span id="meName"></span></button><div id="voice"><span class="vdot"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg></span><span id="voiceTxt"></span><button id="voiceEnd" class="small danger"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.8 1.1-2.6 1.8-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.3 8.8 7.5 7 12 7s8.7 1.8 11.7 4.7a1 1 0 0 1 0 1.4l-2.5 2.4c-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3-.8-.7-1.6-1.3-2.6-1.8-.4-.2-.6-.5-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></button></div></div><button id="mute" data-tt="mute"><svg viewBox="0 0 24 24"><path id="micPath" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg><span></span></button><button id="volBtn" data-tt="masterVol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg></button><button id="openSet" data-tt="settings"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7 7 0 0 0-1.7-1L15 3h-4l-.4 2.6a7 7 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7 7 0 0 0 1.7 1L11 21h4l.4-2.6a7 7 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button></header>
+  <header id="prof"><span id="meAvW"><span class="av" id="meAv"></span><i id="presence"></i></span><div class="pmeta"><button id="meBtn" class="mebtn" data-tt="changeName"><span id="meName"></span></button></div><button id="voiceEnd" class="danger" hidden><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.8 1.1-2.6 1.8-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.3 8.8 7.5 7 12 7s8.7 1.8 11.7 4.7a1 1 0 0 1 0 1.4l-2.5 2.4c-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3-.8-.7-1.6-1.3-2.6-1.8-.4-.2-.6-.5-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></button><button id="mute" data-tt="mute"><svg viewBox="0 0 24 24"><path id="micPath" d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg><span></span></button><button id="volBtn" data-tt="masterVol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg></button><button id="openSet" data-tt="settings"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7 7 0 0 0-1.7-1L15 3h-4l-.4 2.6a7 7 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7 7 0 0 0 1.7 1L11 21h4l.4-2.6a7 7 0 0 0 1.7-1l2.5 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button><div id="voice"><span class="vdot"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg></span><span id="voiceTxt"></span></div></header>
   <nav id="nav">
     <div class="navhead"><span data-t="rooms"></span><span class="row" style="gap:4px"><button class="small" id="pasteInv" data-t="pasteShort"></button><button class="small" id="addRoom" data-t="addShort"></button></span></div>
     <div class="note navnote" id="inviteNote" style="display:none"></div>
@@ -1551,6 +1554,7 @@ function renderView(){
   if (rv) mode = live ? (room || entering ? 'leave' : null) : 'join';
   else if (dm) mode = callHere ? 'hang' : 'call';
   else if (room || entering) mode = currentRoom?.call ? 'hang' : 'leave';
+  if (mode === 'leave' || mode === 'hang') mode = null;   // leaving is the red button in the profile
   b.hidden = !mode;
   if (mode){
     const end = mode === 'leave' || mode === 'hang';
@@ -1562,7 +1566,7 @@ function renderView(){
   const h = $('headCall');
   h.hidden = !mode || v === 'home' || (rv && !live);
   if (!h.hidden){ h.className = 'small ' + b.className; h.innerHTML = b.innerHTML; }
-  $('voiceEnd').title = t(currentRoom?.call ? 'hangUp' : 'leave');
+  $('voiceEnd').title = t(currentRoom?.call ? 'hangUp' : 'leave'); $('voiceEnd').hidden = !(room || entering);
   if (dm) renderDMLog();
   renderVoice(); updateTitle(); placePeople();
 }
