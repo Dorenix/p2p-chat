@@ -17,6 +17,7 @@
 [data-theme=amber]{--bg:#0a0700;--panel:#120d02;--panel2:#1a1303;--line:#3d2c08;--fg:#ffb000;--dim:#b37b00;--faint:#5e4100;--hi:#ffe2a8;--warn:#ff6a00;--g:255,176,0}
 [data-theme=normal]{--bg:#15171c;--panel:#1c1f25;--panel2:#252931;--line:#2d323b;--fg:#dfe3e8;--dim:#98a0ab;--faint:#5d6470;--hi:#ffffff;--warn:#f0b232;--bad:#f2555a;--g:79,124,255;--glow:none;
   --accent:#4f7cff;--voice:#2fbf71;--online:#2fbf71;--unread:#f2555a;--liveBg:rgba(47,191,113,.16);--liveFg:#7ee8b0;--onAccent:#fff}
+[data-theme=crt]{--bg:#020902;--panel:#041204;--panel2:#071a07;--line:#164a16;--fg:#5dff8a;--dim:#2fb85a;--faint:#1c6a32;--hi:#c8ffd6;--warn:#ffc040;--g:93,255,138}
 [data-theme=cyan]{--bg:#02080a;--panel:#061114;--panel2:#08181c;--line:#123a42;--fg:#33e6ff;--dim:#1f97a8;--faint:#145560;--hi:#c2f6ff;--warn:#ffb000;--g:51,230,255}
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
@@ -169,6 +170,7 @@ dialog h3::before{content:"# "}
 #menu button.go{color:var(--voice)}
 #toast{display:none;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:70;background:var(--panel2);border:1px solid var(--line);color:var(--hi);padding:8px 14px;max-width:calc(100% - 32px);text-align:center;font-size:13px}
 #toast.on{display:block}
+@media (min-width:701px){ #toast{bottom:24px} }
 #roomOff{flex:1;display:none;align-items:center;justify-content:center;padding:24px;text-align:center}
 .offbox{display:grid;gap:14px;justify-items:center;max-width:400px}
 .offbox h2{margin:0;font-size:20px;font-weight:600;color:var(--hi)}
@@ -224,6 +226,7 @@ dialog h3::before{content:"# "}
 #bar svg{width:16px;height:16px;fill:currentColor;flex:none}
 #voice{order:9;flex:1 1 100%;display:flex;align-items:center;gap:6px;padding:0 0 2px 8px;margin-top:-2px;font-size:12px;color:var(--dim);min-width:0;cursor:default}
 #voice.on{cursor:pointer}
+#voice.calling,.navitem.live .vtag.calling{animation:pulse 1.2s ease-in-out infinite}
 #voice.on:hover span:last-child{text-decoration:underline}
 #voice:not(.on){display:none}
 #voice .vdot{display:flex;flex:none}
@@ -364,6 +367,16 @@ body.peopleOpen #friendPanel{display:none}
 #askList{display:grid;gap:6px}
 #askList:empty{display:none}
 #askList button{text-align:left}
+/* Secret CRT theme: heavier scanlines, glow, vignette and a faint flicker */
+[data-theme=crt] body{text-shadow:0 0 3px rgba(93,255,138,.65),0 0 9px rgba(93,255,138,.25);animation:crtFlick 5s infinite}
+[data-theme=crt] body::after{background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.34) 2px 3px);z-index:98}
+[data-theme=crt] body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:99;background:radial-gradient(ellipse at center,rgba(93,255,138,.05) 0%,transparent 55%,rgba(0,0,0,.6) 100%)}
+@keyframes crtFlick{0%,100%{opacity:1}47%{opacity:1}48%{opacity:.93}49%{opacity:.99}50%{opacity:.95}51%{opacity:1}}
+@media (prefers-reduced-motion:reduce){[data-theme=crt] body{animation:none}}
+/* Easter eggs */
+#matrix{position:fixed;inset:0;z-index:80;pointer-events:none;transition:opacity .8s}
+.line.hack{font-family:ui-monospace,Consolas,"DejaVu Sans Mono",monospace;font-size:13px;color:var(--voice)}
+.line.hack.big{font-weight:700;color:var(--hi);background:rgba(47,191,113,.12);border-left:2px solid var(--voice);padding-left:6px}
 /* Simple mode: plain look, advanced things hidden */
 body.simple .adv{display:none !important}
 /* Narrower screens: the people list opens as a panel from the strip in the chat header and closes by itself */
@@ -644,7 +657,9 @@ const LANG = {
     turnUserPh:'username', turnPassPh:'password',
     aloneHelp:'Nobody found yet. Invite others with the Invite button at the top. If they are here already, check:\n1. everyone uses the same version (v{0}, shown on the join screen)\n2. type /diag here and on the other computer and compare the results',
     aloneSimple:'Nobody has joined yet. Press Invite at the top and send the link to the people you want to talk to.',
-    path_p2p:'P2P', path_lan:'LAN', path_relay:'RELAY', pathDesc_p2p:'Direct connection over the internet', pathDesc_lan:'Direct connection inside your local network', pathDesc_relay:'Relayed through the TURN server, still end-to-end encrypted', netV6yes:'IPv6 available, direct connections to other IPv6 devices should work', netV6local:'IPv6 only local, no internet IPv6', netV6no:'no IPv6 on this network', netSvcBad:'TURN service failed: {0}', netNoTurn:'no TURN configured', bootTurn:'turn credentials ...', svcTitle:'TURN service (Cloudflare Worker)', svcDesc:'Address of the Worker that hands out TURN credentials. Leave empty to use the one built into this file.', turnIsOff:'switched off by the owner', turnNoSvc:'no TURN service address set', turnNoAdmin:'no admin key set in Settings > Network', turnBadAdmin:'wrong admin key', turnStOff:'off', turnStOn:'on', turnStOnUntil:'on until {0}', turnRevoked:'{0} credentials revoked', turnRejoin:'Rejoin the room so your connections can use it.', adminTitle:'Admin key (owner only)', adminDesc:'Only on the computer of the person who owns the TURN server. Lets you switch it with /turn on, /turn on 3 (hours) and /turn off. Never share it.', adminPh:'admin key', useRunning:'checking TURN usage…', useMine:'this device, this session: {0} relayed', useMonth:'account, {0}: {1} sent, {2} received', use24:'last 24 h: {0}', useFree:'{0}% of the free 1,000 GB used (counted on sent data, analytics lag a few minutes)', useBtn:'Show TURN usage', moreNet:'Advanced: TURN server', moreAcct:'Backup and reset', volShort:'Vol', akaShort:'Was', cardAccount:'ID', cardConn:'Link', cardCode:'Code', cardNick:'Nickname', demo:'Try demo', ambiguous:'more than one person has that name, use one of: {0}', pmBtn:'private message', pmShort:'Msg', inRoom:'In room', friends:'Friends', noFriends:'Nobody yet. Add people as friends from their card in the room.', hereNow:'here now', lastSeen:'seen {0}', agoNow:'just now', agoMin:'{0} min ago', agoHour:'{0} h ago', agoDay:'{0} days ago', nameShort:'Name', unfriend:'remove friend', masterVol:'Master volume', changeName:'change', dupAcct:'same account twice (two tabs?)', otherTabQ:'This app is already in a call in another tab of this browser. Tabs of one browser share the same account, which confuses the others.\n\nOK: join with a temporary account in this tab (for testing, nothing is saved)\nCancel: go back and use the other tab', tempAcct:'temporary account for this tab, nothing is saved', connIssue:'connection issue with {0}: {1}', silence:'mute for me', unsilence:'unmute', hearShort:'Hear', silenced:'muted by you', silencedMsg:'{0} is muted for you', unsilencedMsg:'{0} is no longer muted for you', soundBlocked:'Sound is blocked by the browser. Click here to enable it.', noAudioIn:'no audio arriving', netAudio:'audio engine: {0}, {1} Hz', audioRetry:'audio to {0} did not start, retrying ({1}/3)', notConnected:'not connected to you (seen by {0})', connectingTo:'connecting…', notConnectedDesc:'Others in the room are connected to this person, but your connection to them has not been established. It keeps trying automatically.', notConnCount:'{0} not connected', waitMicShort:'waiting for microphone…', micSlow:'The browser is still waiting for microphone permission. Click the microphone or lock icon in the address bar and allow it. You can already listen and chat.', notifyOpt:'Desktop notifications', notifyDesc:'Show a system notification when someone mentions you or sends a private message while this tab is in the background.', notifyDenied:'The browser blocked notifications. Allow them via the lock icon in the address bar.', netMdns:'local addresses are hidden (mDNS) until the microphone is allowed; LAN connections may fail if the network blocks multicast', diagSignal:'handshake error ({0}): {1}', diagIce:'connection attempt failed \u00b7 mine: {0} \u00b7 theirs: {1} \u00b7 pairs: {2}', diagRecent:'recent connection problems:', none:'none', pasteInvite:'Paste invite', invite:'Invite', copyInviteLink:'Copy invite link', noRooms:'No rooms yet. Open an invite link, paste an invite, or create a new room.', pasteQ:'Paste the invite link or code:', inviteBad:'That is not a valid invite.', inviteAdded:'Room "{0}" added. Type your name and press Join.', inviteCopied:'Invite link copied. Send it privately: anyone with the link can join this room.', inviteCodeCopied:'Invite code copied. The other person pastes it with "Paste invite" on the join screen. Send it privately.', demoRoom:'Demo room', chooseRoomQ:'Which room do you want to send?', invBtn:'send room invite', invSent:'Invite to "{0}" sent to {1}.', invRecv:'{0} invites you to the room "{1}".', invAdd:'add room', invHave:'already added', invAdded:'Room "{0}" added to your room list. Leave this room to join it.', dmBtn:'message', onlineNow:'online', dmOnline:'{0} is online. Private chat, end-to-end encrypted.', dmOffline:'{0} is offline. Messages wait on this device and are delivered when you are both online.', dmDelivered:'delivered', dmWaiting:'waiting for delivery', close:'close', dmNoKey:'Meet once in a room after updating, then private chat works', people:'People', welcomeTitle:'Welcome', continue:'Continue', pasteShort:'paste', addShort:'+ new', call:'call', inCall:'in call', homeHint:'Open a room or a friend on the left. Joining voice or calling is the button at the bottom.\nNew here? Open an invite link, or create a room with + new and invite others.', answer:'answer', decline:'decline', changeName:'Change your name', appName:'p2p voice', noVoice:'not in voice', voiceCall:'call \u00b7 {0}', voiceRoom:'{0}', voiceShow:'Show this room', hangUp:'Hang up', callBtnTxt:'Call', presOn:'Online: friends can reach you', presOff:'Offline: no connection to the servers', peopleFoldTip:'Show or hide who is here', ok:'OK', micDeadTip:'No microphone. Click to try again', joinVoice:'Join voice', details:'Details', more:'More', lockAct:'Lock: only friends can talk with me', unlockAct:'Unlock room', acctShort:'ID', roomOffText:'You are not in this room yet.\nThe room chat is shared only between the people in voice, and there is no history: you see messages from the moment you join.', roomOffSwitch:'Joining ends: {0}.', voiceHere:'you are in voice here', voiceTag:'voice', callTag:'in call', leaveFirst:'Leave the room before deleting it.', switchQ:'Leave "{0}" and join "{1}"?', statusShort:'Status', invSentShort:'invite to the room "{0}"', invRecvShort:'invites you to the room "{0}"', invShort:'Room', callOffline:'{0} is offline right now.', ringText:'{0} is calling', callDeclined:'{0} declined the call.', callEnded:'{0} hung up.', hereShort:'here', done:'Done', mainRoom:'Main room', builtIn:'(built in)', edit:'Edit', del:'Delete', delConfirm:'Delete room "{0}"?',
+    path_p2p:'P2P', path_lan:'LAN', path_relay:'RELAY', pathDesc_p2p:'Direct connection over the internet', pathDesc_lan:'Direct connection inside your local network', pathDesc_relay:'Relayed through the TURN server, still end-to-end encrypted', netV6yes:'IPv6 available, direct connections to other IPv6 devices should work', netV6local:'IPv6 only local, no internet IPv6', netV6no:'no IPv6 on this network', netSvcBad:'TURN service failed: {0}', netNoTurn:'no TURN configured', bootTurn:'turn credentials ...', svcTitle:'TURN service (Cloudflare Worker)', svcDesc:'Address of the Worker that hands out TURN credentials. Leave empty to use the one built into this file.', turnIsOff:'switched off by the owner', turnNoSvc:'no TURN service address set', turnNoAdmin:'no admin key set in Settings > Network', turnBadAdmin:'wrong admin key', turnStOff:'off', turnStOn:'on', turnStOnUntil:'on until {0}', turnRevoked:'{0} credentials revoked', turnRejoin:'Rejoin the room so your connections can use it.', adminTitle:'Admin key (owner only)', adminDesc:'Only on the computer of the person who owns the TURN server. Lets you switch it with /turn on, /turn on 3 (hours) and /turn off. Never share it.', adminPh:'admin key', useRunning:'checking TURN usage…', useMine:'this device, this session: {0} relayed', useMonth:'account, {0}: {1} sent, {2} received', use24:'last 24 h: {0}', useFree:'{0}% of the free 1,000 GB used (counted on sent data, analytics lag a few minutes)', useBtn:'Show TURN usage', moreNet:'Advanced: TURN server', moreAcct:'Backup and reset', volShort:'Vol', akaShort:'Was', cardAccount:'ID', cardConn:'Link', cardCode:'Code', cardNick:'Nickname', demo:'Try demo', ambiguous:'more than one person has that name, use one of: {0}', pmBtn:'private message', pmShort:'Msg', inRoom:'In room', friends:'Friends', noFriends:'Nobody yet. Add people as friends from their card in the room.', hereNow:'here now', lastSeen:'seen {0}', agoNow:'just now', agoMin:'{0} min ago', agoHour:'{0} h ago', agoDay:'{0} days ago', nameShort:'Name', unfriend:'remove friend', masterVol:'Master volume', changeName:'change', dupAcct:'same account twice (two tabs?)', otherTabQ:'This app is already in a call in another tab of this browser. Tabs of one browser share the same account, which confuses the others.\n\nOK: join with a temporary account in this tab (for testing, nothing is saved)\nCancel: go back and use the other tab', tempAcct:'temporary account for this tab, nothing is saved', connIssue:'connection issue with {0}: {1}', silence:'mute for me', unsilence:'unmute', hearShort:'Hear', silenced:'muted by you', silencedMsg:'{0} is muted for you', unsilencedMsg:'{0} is no longer muted for you', soundBlocked:'Sound is blocked by the browser. Click here to enable it.', noAudioIn:'no audio arriving', netAudio:'audio engine: {0}, {1} Hz', audioRetry:'audio to {0} did not start, retrying ({1}/3)', notConnected:'not connected to you (seen by {0})', connectingTo:'connecting…', notConnectedDesc:'Others in the room are connected to this person, but your connection to them has not been established. It keeps trying automatically.', notConnCount:'{0} not connected', waitMicShort:'waiting for microphone…', micSlow:'The browser is still waiting for microphone permission. Click the microphone or lock icon in the address bar and allow it. You can already listen and chat.', notifyOpt:'Desktop notifications', notifyDesc:'Show a system notification when someone mentions you or sends a private message while this tab is in the background.', notifyDenied:'The browser blocked notifications. Allow them via the lock icon in the address bar.', netMdns:'local addresses are hidden (mDNS) until the microphone is allowed; LAN connections may fail if the network blocks multicast', diagSignal:'handshake error ({0}): {1}', diagIce:'connection attempt failed \u00b7 mine: {0} \u00b7 theirs: {1} \u00b7 pairs: {2}', diagRecent:'recent connection problems:', none:'none', pasteInvite:'Paste invite', invite:'Invite', copyInviteLink:'Copy invite link', noRooms:'No rooms yet. Open an invite link, paste an invite, or create a new room.', pasteQ:'Paste the invite link or code:', inviteBad:'That is not a valid invite.', inviteAdded:'Room "{0}" added. Type your name and press Join.', inviteCopied:'Invite link copied. Send it privately: anyone with the link can join this room.', inviteCodeCopied:'Invite code copied. The other person pastes it with "Paste invite" on the join screen. Send it privately.', demoRoom:'Demo room', chooseRoomQ:'Which room do you want to send?', invBtn:'send room invite', invSent:'Invite to "{0}" sent to {1}.', invRecv:'{0} invites you to the room "{1}".', invAdd:'add room', invHave:'already added', invAdded:'Room "{0}" added to your room list. Leave this room to join it.', dmBtn:'message', onlineNow:'online', dmOnline:'{0} is online. Private chat, end-to-end encrypted.', dmOffline:'{0} is offline. Messages wait on this device and are delivered when you are both online.', dmDelivered:'delivered', dmWaiting:'waiting for delivery', close:'close', dmNoKey:'Meet once in a room after updating, then private chat works', people:'People', welcomeTitle:'Welcome', continue:'Continue', pasteShort:'paste', addShort:'+ new', call:'call', inCall:'in call', homeHint:'Open a room or a friend on the left. Joining voice or calling is the button at the bottom.\nNew here? Open an invite link, or create a room with + new and invite others.', answer:'answer', decline:'decline', changeName:'Change your name', appName:'p2p voice', noVoice:'not in voice', voiceCall:'call \u00b7 {0}', voiceRoom:'{0}', voiceShow:'Show this room', hangUp:'Hang up', callBtnTxt:'Call', themeCrt:'CRT monitor (secret)', crtUnlocked:'Secret unlocked: CRT monitor theme. Find it in Settings.',
+    hackNoRoom:'/hack only works in a room you are in', hackStart:'[{0}] initiating hack on {1}\u2026', hackFw:'bypassing firewall', hackTrace:'tracing IP\u2026', hackRam:'downloading more RAM', hackDecrypt:'decrypting mainframe', hackPw:'cracking password', hackDone:'ACCESS GRANTED:',
+    hackJokes:'{0}\'s browser history: 412 searches for "is cereal a soup"|{0}\'s password is "password123"|{0} has 3,847 unread emails|{0}\'s most played song: Baby Shark (10 hour version)|{0} has 67 browser tabs open right now|{0} rated their own cooking 5 stars, 14 times|{0}\'s Wi-Fi is named "FBI Surveillance Van 3"|{0} still has not finished the tutorial|{0} says "you are on mute" 9 times a day|{0} once lost an argument to a toaster', calling:'Calling {0}\u2026', callingTag:'calling\u2026', noAnswer:'{0} did not answer.', aloneWarn:'Nobody else is here. You will leave voice in 1 minute unless someone joins.', aloneLeft:'Left "{0}": nobody else was there for {1} minutes.', presOn:'Online: friends can reach you', presOff:'Offline: no connection to the servers', peopleFoldTip:'Show or hide who is here', ok:'OK', micDeadTip:'No microphone. Click to try again', joinVoice:'Join voice', details:'Details', more:'More', lockAct:'Lock: only friends can talk with me', unlockAct:'Unlock room', acctShort:'ID', roomOffText:'You are not in this room yet.\nThe room chat is shared only between the people in voice, and there is no history: you see messages from the moment you join.', roomOffSwitch:'Joining ends: {0}.', voiceHere:'you are in voice here', voiceTag:'voice', callTag:'in call', leaveFirst:'Leave the room before deleting it.', switchQ:'Leave "{0}" and join "{1}"?', statusShort:'Status', invSentShort:'invite to the room "{0}"', invRecvShort:'invites you to the room "{0}"', invShort:'Room', callOffline:'{0} is offline right now.', ringText:'{0} is calling', callDeclined:'{0} declined the call.', callEnded:'{0} hung up.', hereShort:'here', done:'Done', mainRoom:'Main room', builtIn:'(built in)', edit:'Edit', del:'Delete', delConfirm:'Delete room "{0}"?',
     needRoomPw:'Room name and password are required', error:'Error', active:'{0} active',
     nnFail:'{0} could not start here ({1}). In Edge or Chrome it needs the page hosted online, not opened as a file.',
     default:'Default', you:'(you)', muted:'Muted', inVoice:'In voice', talking:'Talking', sending:'Sending', quiet:'Quiet', volume:'Volume',
@@ -705,7 +720,9 @@ const LANG = {
     turnUserPh:'nazwa użytkownika', turnPassPh:'hasło',
     aloneHelp:'Nikogo jeszcze nie znaleziono. Zaproś innych przyciskiem Zaproś u góry. Jeśli już tu są, sprawdź:\n1. czy wszyscy mają tę samą wersję (v{0}, widoczna na ekranie dołączania)\n2. wpisz /diag tutaj i na drugim komputerze i porównaj wyniki',
     aloneSimple:'Nikt jeszcze nie dołączył. Kliknij Zaproś u góry i wyślij link osobom, z którymi chcesz rozmawiać.',
-    path_p2p:'P2P', path_lan:'LAN', path_relay:'PRZEKAŹNIK', pathDesc_p2p:'Bezpośrednie połączenie przez internet', pathDesc_lan:'Bezpośrednie połączenie w sieci lokalnej', pathDesc_relay:'Przez serwer TURN, nadal szyfrowane end-to-end', netV6yes:'IPv6 dostępne, połączenia bezpośrednie z innymi urządzeniami IPv6 powinny działać', netV6local:'IPv6 tylko lokalnie, brak IPv6 w internecie', netV6no:'brak IPv6 w tej sieci', netSvcBad:'usługa TURN nie działa: {0}', netNoTurn:'brak skonfigurowanego TURN', bootTurn:'dane TURN ...', svcTitle:'Usługa TURN (Cloudflare Worker)', svcDesc:'Adres Workera, który wydaje dane logowania TURN. Zostaw puste, aby użyć adresu wbudowanego w ten plik.', turnIsOff:'wyłączony przez właściciela', turnNoSvc:'nie ustawiono adresu usługi TURN', turnNoAdmin:'brak klucza administratora w Ustawienia > Sieć', turnBadAdmin:'zły klucz administratora', turnStOff:'wyłączony', turnStOn:'włączony', turnStOnUntil:'włączony do {0}', turnRevoked:'unieważniono dane: {0}', turnRejoin:'Dołącz ponownie do pokoju, aby połączenia mogły z niego korzystać.', adminTitle:'Klucz administratora (tylko właściciel)', adminDesc:'Tylko na komputerze właściciela serwera TURN. Pozwala przełączać go poleceniami /turn on, /turn on 3 (godziny) i /turn off. Nigdy go nie udostępniaj.', adminPh:'klucz administratora', useRunning:'sprawdzanie zużycia TURN…', useMine:'to urządzenie, ta sesja: {0} przez przekaźnik', useMonth:'konto, {0}: wysłano {1}, odebrano {2}', use24:'ostatnie 24 h: {0}', useFree:'wykorzystano {0}% darmowych 1000 GB (liczone od wysłanych danych, statystyki mają kilka minut opóźnienia)', useBtn:'Pokaż zużycie TURN', moreNet:'Zaawansowane: serwer TURN', moreAcct:'Kopia zapasowa i reset', volShort:'Głośn.', akaShort:'Dawniej', cardAccount:'ID', cardConn:'Łącze', cardCode:'Kod', cardNick:'Pseudonim', demo:'Wypróbuj demo', ambiguous:'kilka osób ma tę nazwę, użyj jednej z: {0}', pmBtn:'wiadomość prywatna', pmShort:'Wiad.', inRoom:'W pokoju', friends:'Znajomi', noFriends:'Jeszcze nikogo. Dodaj osoby do znajomych z ich karty w pokoju.', hereNow:'jest tutaj', lastSeen:'widziany(-a) {0}', agoNow:'przed chwilą', agoMin:'{0} min temu', agoHour:'{0} godz. temu', agoDay:'{0} dni temu', nameShort:'Nazwa', unfriend:'usuń ze znajomych', masterVol:'Głośność ogólna', changeName:'zmień', dupAcct:'to samo konto dwa razy (dwie karty?)', otherTabQ:'Aplikacja jest już w rozmowie w innej karcie tej przeglądarki. Karty jednej przeglądarki mają to samo konto, co myli innych.\n\nOK: dołącz z tymczasowym kontem w tej karcie (do testów, nic nie jest zapisywane)\nAnuluj: wróć i użyj drugiej karty', tempAcct:'tymczasowe konto dla tej karty, nic nie jest zapisywane', connIssue:'problem z połączeniem z {0}: {1}', silence:'wycisz u mnie', unsilence:'przywróć', hearShort:'Słuch', silenced:'wyciszony(-a) przez Ciebie', silencedMsg:'{0} jest u Ciebie wyciszony(-a)', unsilencedMsg:'{0} nie jest już u Ciebie wyciszony(-a)', soundBlocked:'Przeglądarka blokuje dźwięk. Kliknij tutaj, aby go włączyć.', noAudioIn:'nie dociera dźwięk', netAudio:'silnik audio: {0}, {1} Hz', audioRetry:'dźwięk do {0} nie ruszył, ponawiam ({1}/3)', notConnected:'brak połączenia z Tobą (widzi: {0})', connectingTo:'łączenie…', notConnectedDesc:'Inni w pokoju są połączeni z tą osobą, ale Twoje połączenie z nią jeszcze nie powstało. Próby trwają automatycznie.', notConnCount:'bez połączenia: {0}', waitMicShort:'czekam na mikrofon…', micSlow:'Przeglądarka wciąż czeka na zgodę na mikrofon. Kliknij ikonę mikrofonu lub kłódki w pasku adresu i zezwól. Możesz już słuchać i pisać.', notifyOpt:'Powiadomienia systemowe', notifyDesc:'Pokazuj powiadomienie systemowe, gdy ktoś Cię wspomni lub wyśle wiadomość prywatną, a ta karta jest w tle.', notifyDenied:'Przeglądarka zablokowała powiadomienia. Zezwól na nie przez ikonę kłódki w pasku adresu.', netMdns:'adresy lokalne są ukryte (mDNS), dopóki mikrofon nie jest dozwolony; połączenia w sieci lokalnej mogą zawodzić, jeśli sieć blokuje multicast', diagSignal:'błąd uzgadniania ({0}): {1}', diagIce:'próba połączenia nieudana \u00b7 moje: {0} \u00b7 ich: {1} \u00b7 pary: {2}', diagRecent:'ostatnie problemy z połączeniem:', none:'brak', pasteInvite:'Wklej zaproszenie', invite:'Zaproś', copyInviteLink:'Kopiuj link z zaproszeniem', noRooms:'Brak pokoi. Otwórz link z zaproszeniem, wklej zaproszenie lub utwórz nowy pokój.', pasteQ:'Wklej link lub kod zaproszenia:', inviteBad:'To nie jest prawidłowe zaproszenie.', inviteAdded:'Dodano pokój „{0}”. Wpisz swoje imię i kliknij Dołącz.', inviteCopied:'Skopiowano link z zaproszeniem. Wyślij go prywatnie: każdy z tym linkiem może wejść do pokoju.', inviteCodeCopied:'Skopiowano kod zaproszenia. Druga osoba wkleja go przyciskiem „Wklej zaproszenie” na ekranie dołączania. Wyślij go prywatnie.', demoRoom:'Pokój demo', chooseRoomQ:'Który pokój chcesz wysłać?', invBtn:'wyślij zaproszenie', invSent:'Wysłano zaproszenie do „{0}” dla {1}.', invRecv:'{0} zaprasza Cię do pokoju „{1}”.', invAdd:'dodaj pokój', invHave:'już dodany', invAdded:'Dodano pokój „{0}” do listy. Wyjdź z tego pokoju, aby do niego dołączyć.', dmBtn:'wiadomość', onlineNow:'online', dmOnline:'{0} jest online. Prywatny czat, szyfrowany end-to-end.', dmOffline:'{0} jest offline. Wiadomości czekają na tym urządzeniu i zostaną dostarczone, gdy oboje będziecie online.', dmDelivered:'dostarczono', dmWaiting:'czeka na dostarczenie', close:'zamknij', dmNoKey:'Spotkajcie się raz w pokoju po aktualizacji, wtedy czat prywatny zadziała', people:'Osoby', welcomeTitle:'Witaj', continue:'Dalej', pasteShort:'wklej', addShort:'+ nowy', call:'zadzwoń', inCall:'w rozmowie', homeHint:'Otwórz pokój albo znajomego po lewej. Dołączanie do rozmowy i dzwonienie jest przyciskiem na dole.\nPierwszy raz? Otwórz link z zaproszeniem albo utwórz pokój przyciskiem + nowy i zaproś innych.', answer:'odbierz', decline:'odrzuć', changeName:'Zmień swoje imię', appName:'p2p voice', noVoice:'poza rozmową', voiceCall:'rozmowa \u00b7 {0}', voiceRoom:'{0}', voiceShow:'Pokaż ten pokój', hangUp:'Rozłącz', callBtnTxt:'Zadzwoń', presOn:'Online: znajomi mogą się z tobą połączyć', presOff:'Offline: brak połączenia z serwerami', peopleFoldTip:'Pokaż lub ukryj, kto tu jest', ok:'OK', micDeadTip:'Brak mikrofonu. Kliknij, aby spróbować ponownie', joinVoice:'Dołącz', details:'Szczegóły', more:'Więcej', lockAct:'Zamknij: rozmawiam tylko ze znajomymi', unlockAct:'Otwórz pokój', acctShort:'ID', roomOffText:'Nie jesteś jeszcze w tym pokoju.\nCzat pokoju widzą tylko osoby na kanale głosowym i nie ma historii: wiadomości widać od chwili dołączenia.', roomOffSwitch:'Dołączenie zakończy: {0}.', voiceHere:'tu jesteś na głosie', voiceTag:'głos', callTag:'rozmowa', leaveFirst:'Najpierw wyjdź z pokoju, potem go usuń.', switchQ:'Opuścić „{0}” i dołączyć do „{1}”?', statusShort:'Status', invSentShort:'zaproszenie do pokoju „{0}”', invRecvShort:'zaprasza Cię do pokoju „{0}”', invShort:'Pokój', callOffline:'{0} jest teraz offline.', ringText:'{0} dzwoni', callDeclined:'{0} odrzuca rozmowę.', callEnded:'{0} rozłącza się.', hereShort:'tutaj', done:'Gotowe', mainRoom:'Pokój główny', builtIn:'(wbudowany)', edit:'Edytuj', del:'Usuń', delConfirm:'Usunąć pokój „{0}”?',
+    path_p2p:'P2P', path_lan:'LAN', path_relay:'PRZEKAŹNIK', pathDesc_p2p:'Bezpośrednie połączenie przez internet', pathDesc_lan:'Bezpośrednie połączenie w sieci lokalnej', pathDesc_relay:'Przez serwer TURN, nadal szyfrowane end-to-end', netV6yes:'IPv6 dostępne, połączenia bezpośrednie z innymi urządzeniami IPv6 powinny działać', netV6local:'IPv6 tylko lokalnie, brak IPv6 w internecie', netV6no:'brak IPv6 w tej sieci', netSvcBad:'usługa TURN nie działa: {0}', netNoTurn:'brak skonfigurowanego TURN', bootTurn:'dane TURN ...', svcTitle:'Usługa TURN (Cloudflare Worker)', svcDesc:'Adres Workera, który wydaje dane logowania TURN. Zostaw puste, aby użyć adresu wbudowanego w ten plik.', turnIsOff:'wyłączony przez właściciela', turnNoSvc:'nie ustawiono adresu usługi TURN', turnNoAdmin:'brak klucza administratora w Ustawienia > Sieć', turnBadAdmin:'zły klucz administratora', turnStOff:'wyłączony', turnStOn:'włączony', turnStOnUntil:'włączony do {0}', turnRevoked:'unieważniono dane: {0}', turnRejoin:'Dołącz ponownie do pokoju, aby połączenia mogły z niego korzystać.', adminTitle:'Klucz administratora (tylko właściciel)', adminDesc:'Tylko na komputerze właściciela serwera TURN. Pozwala przełączać go poleceniami /turn on, /turn on 3 (godziny) i /turn off. Nigdy go nie udostępniaj.', adminPh:'klucz administratora', useRunning:'sprawdzanie zużycia TURN…', useMine:'to urządzenie, ta sesja: {0} przez przekaźnik', useMonth:'konto, {0}: wysłano {1}, odebrano {2}', use24:'ostatnie 24 h: {0}', useFree:'wykorzystano {0}% darmowych 1000 GB (liczone od wysłanych danych, statystyki mają kilka minut opóźnienia)', useBtn:'Pokaż zużycie TURN', moreNet:'Zaawansowane: serwer TURN', moreAcct:'Kopia zapasowa i reset', volShort:'Głośn.', akaShort:'Dawniej', cardAccount:'ID', cardConn:'Łącze', cardCode:'Kod', cardNick:'Pseudonim', demo:'Wypróbuj demo', ambiguous:'kilka osób ma tę nazwę, użyj jednej z: {0}', pmBtn:'wiadomość prywatna', pmShort:'Wiad.', inRoom:'W pokoju', friends:'Znajomi', noFriends:'Jeszcze nikogo. Dodaj osoby do znajomych z ich karty w pokoju.', hereNow:'jest tutaj', lastSeen:'widziany(-a) {0}', agoNow:'przed chwilą', agoMin:'{0} min temu', agoHour:'{0} godz. temu', agoDay:'{0} dni temu', nameShort:'Nazwa', unfriend:'usuń ze znajomych', masterVol:'Głośność ogólna', changeName:'zmień', dupAcct:'to samo konto dwa razy (dwie karty?)', otherTabQ:'Aplikacja jest już w rozmowie w innej karcie tej przeglądarki. Karty jednej przeglądarki mają to samo konto, co myli innych.\n\nOK: dołącz z tymczasowym kontem w tej karcie (do testów, nic nie jest zapisywane)\nAnuluj: wróć i użyj drugiej karty', tempAcct:'tymczasowe konto dla tej karty, nic nie jest zapisywane', connIssue:'problem z połączeniem z {0}: {1}', silence:'wycisz u mnie', unsilence:'przywróć', hearShort:'Słuch', silenced:'wyciszony(-a) przez Ciebie', silencedMsg:'{0} jest u Ciebie wyciszony(-a)', unsilencedMsg:'{0} nie jest już u Ciebie wyciszony(-a)', soundBlocked:'Przeglądarka blokuje dźwięk. Kliknij tutaj, aby go włączyć.', noAudioIn:'nie dociera dźwięk', netAudio:'silnik audio: {0}, {1} Hz', audioRetry:'dźwięk do {0} nie ruszył, ponawiam ({1}/3)', notConnected:'brak połączenia z Tobą (widzi: {0})', connectingTo:'łączenie…', notConnectedDesc:'Inni w pokoju są połączeni z tą osobą, ale Twoje połączenie z nią jeszcze nie powstało. Próby trwają automatycznie.', notConnCount:'bez połączenia: {0}', waitMicShort:'czekam na mikrofon…', micSlow:'Przeglądarka wciąż czeka na zgodę na mikrofon. Kliknij ikonę mikrofonu lub kłódki w pasku adresu i zezwól. Możesz już słuchać i pisać.', notifyOpt:'Powiadomienia systemowe', notifyDesc:'Pokazuj powiadomienie systemowe, gdy ktoś Cię wspomni lub wyśle wiadomość prywatną, a ta karta jest w tle.', notifyDenied:'Przeglądarka zablokowała powiadomienia. Zezwól na nie przez ikonę kłódki w pasku adresu.', netMdns:'adresy lokalne są ukryte (mDNS), dopóki mikrofon nie jest dozwolony; połączenia w sieci lokalnej mogą zawodzić, jeśli sieć blokuje multicast', diagSignal:'błąd uzgadniania ({0}): {1}', diagIce:'próba połączenia nieudana \u00b7 moje: {0} \u00b7 ich: {1} \u00b7 pary: {2}', diagRecent:'ostatnie problemy z połączeniem:', none:'brak', pasteInvite:'Wklej zaproszenie', invite:'Zaproś', copyInviteLink:'Kopiuj link z zaproszeniem', noRooms:'Brak pokoi. Otwórz link z zaproszeniem, wklej zaproszenie lub utwórz nowy pokój.', pasteQ:'Wklej link lub kod zaproszenia:', inviteBad:'To nie jest prawidłowe zaproszenie.', inviteAdded:'Dodano pokój „{0}”. Wpisz swoje imię i kliknij Dołącz.', inviteCopied:'Skopiowano link z zaproszeniem. Wyślij go prywatnie: każdy z tym linkiem może wejść do pokoju.', inviteCodeCopied:'Skopiowano kod zaproszenia. Druga osoba wkleja go przyciskiem „Wklej zaproszenie” na ekranie dołączania. Wyślij go prywatnie.', demoRoom:'Pokój demo', chooseRoomQ:'Który pokój chcesz wysłać?', invBtn:'wyślij zaproszenie', invSent:'Wysłano zaproszenie do „{0}” dla {1}.', invRecv:'{0} zaprasza Cię do pokoju „{1}”.', invAdd:'dodaj pokój', invHave:'już dodany', invAdded:'Dodano pokój „{0}” do listy. Wyjdź z tego pokoju, aby do niego dołączyć.', dmBtn:'wiadomość', onlineNow:'online', dmOnline:'{0} jest online. Prywatny czat, szyfrowany end-to-end.', dmOffline:'{0} jest offline. Wiadomości czekają na tym urządzeniu i zostaną dostarczone, gdy oboje będziecie online.', dmDelivered:'dostarczono', dmWaiting:'czeka na dostarczenie', close:'zamknij', dmNoKey:'Spotkajcie się raz w pokoju po aktualizacji, wtedy czat prywatny zadziała', people:'Osoby', welcomeTitle:'Witaj', continue:'Dalej', pasteShort:'wklej', addShort:'+ nowy', call:'zadzwoń', inCall:'w rozmowie', homeHint:'Otwórz pokój albo znajomego po lewej. Dołączanie do rozmowy i dzwonienie jest przyciskiem na dole.\nPierwszy raz? Otwórz link z zaproszeniem albo utwórz pokój przyciskiem + nowy i zaproś innych.', answer:'odbierz', decline:'odrzuć', changeName:'Zmień swoje imię', appName:'p2p voice', noVoice:'poza rozmową', voiceCall:'rozmowa \u00b7 {0}', voiceRoom:'{0}', voiceShow:'Pokaż ten pokój', hangUp:'Rozłącz', callBtnTxt:'Zadzwoń', themeCrt:'Monitor CRT (sekret)', crtUnlocked:'Odblokowano sekret: motyw monitora CRT. Znajdziesz go w Ustawieniach.',
+    hackNoRoom:'/hack działa tylko w pokoju, w którym jesteś', hackStart:'[{0}] rozpoczyna włam na {1}\u2026', hackFw:'omijanie firewalla', hackTrace:'namierzanie IP\u2026', hackRam:'pobieranie dodatkowego RAM-u', hackDecrypt:'deszyfrowanie mainframe', hackPw:'łamanie hasła', hackDone:'DOSTĘP PRZYZNANY:',
+    hackJokes:'historia przeglądarki {0}: 412 wyszukiwań „czy płatki z mlekiem to zupa”|hasło {0} to „haslo123”|{0} ma 3847 nieprzeczytanych maili|najczęściej słuchana piosenka {0}: Baby Shark (wersja 10-godzinna)|{0} ma teraz otwartych 67 kart|{0} ocenił(a) własną kuchnię na 5 gwiazdek, 14 razy|sieć Wi-Fi {0} nazywa się „Furgonetka ABW 3”|{0} wciąż nie skończył(a) samouczka|{0} mówi „masz wyciszony mikrofon” 9 razy dziennie|{0} przegrał(a) kiedyś kłótnię z tosterem', calling:'Dzwonię do {0}\u2026', callingTag:'dzwonię\u2026', noAnswer:'{0} nie odbiera.', aloneWarn:'Nikogo tu nie ma. Za minutę opuścisz rozmowę, chyba że ktoś dołączy.', aloneLeft:'Opuszczono „{0}”: przez {1} minut nikogo nie było.', presOn:'Online: znajomi mogą się z tobą połączyć', presOff:'Offline: brak połączenia z serwerami', peopleFoldTip:'Pokaż lub ukryj, kto tu jest', ok:'OK', micDeadTip:'Brak mikrofonu. Kliknij, aby spróbować ponownie', joinVoice:'Dołącz', details:'Szczegóły', more:'Więcej', lockAct:'Zamknij: rozmawiam tylko ze znajomymi', unlockAct:'Otwórz pokój', acctShort:'ID', roomOffText:'Nie jesteś jeszcze w tym pokoju.\nCzat pokoju widzą tylko osoby na kanale głosowym i nie ma historii: wiadomości widać od chwili dołączenia.', roomOffSwitch:'Dołączenie zakończy: {0}.', voiceHere:'tu jesteś na głosie', voiceTag:'głos', callTag:'rozmowa', leaveFirst:'Najpierw wyjdź z pokoju, potem go usuń.', switchQ:'Opuścić „{0}” i dołączyć do „{1}”?', statusShort:'Status', invSentShort:'zaproszenie do pokoju „{0}”', invRecvShort:'zaprasza Cię do pokoju „{0}”', invShort:'Pokój', callOffline:'{0} jest teraz offline.', ringText:'{0} dzwoni', callDeclined:'{0} odrzuca rozmowę.', callEnded:'{0} rozłącza się.', hereShort:'tutaj', done:'Gotowe', mainRoom:'Pokój główny', builtIn:'(wbudowany)', edit:'Edytuj', del:'Usuń', delConfirm:'Usunąć pokój „{0}”?',
     needRoomPw:'Identyfikator pokoju i hasło są wymagane', error:'Błąd', active:'{0} aktywny',
     nnFail:'Nie udało się tu uruchomić {0} ({1}). W Edge lub Chrome strona musi być w internecie, a nie otwarta jako plik.',
     default:'Domyślny', you:'(ty)', muted:'Wyciszony', inVoice:'Na kanale', talking:'Mówi', sending:'Nadaje', quiet:'Cisza', volume:'Głośność',
@@ -717,9 +734,11 @@ const LANG = {
 const t = (k, ...a) => (LANG[S.lang]?.[k] ?? LANG.en[k] ?? k).replace(/\{(\d)\}/g, (_, i) => a[i]);
 const MIC_ON = 'M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z';
 const MIC_OFF = 'M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z';
-const THEMES = ['normal', 'green', 'amber', 'cyan'];
+const THEMES = ['normal', 'green', 'amber', 'cyan', 'crt'];
 function applyLook(){
+  if (S.theme === 'crt' && !S.crt) S.theme = 'normal';
   document.documentElement.dataset.theme = THEMES.includes(S.theme) ? S.theme : 'normal';
+  if (S.crt && $('theme') && !$('theme').querySelector('[value=crt]')){ const o = document.createElement('option'); o.value = 'crt'; o.textContent = t('themeCrt'); $('theme').append(o); }
   document.body.classList.toggle('simple', !!S.simple);
   document.querySelectorAll('.simpleChk').forEach(e => e.checked = !!S.simple);
   if ($('theme')) $('theme').value = S.theme;
@@ -1123,6 +1142,7 @@ const SOUNDS = {
   mute:      (a, o, t) => { clack(a, o, t, {f:520, q:1, g:.5, thump:95, tg:.7}); },
   unmute:    (a, o, t) => { clack(a, o, t, {f:1000, g:.45, thump:140}); },
   online:    (a, o, t) => { hum(a, o, t, 392, .12, .22); hum(a, o, t + .12, 523, .12, .3); },
+  ringback:  (a, o, t) => { hum(a, o, t, 440, .13, .35); hum(a, o, t + .45, 440, .11, .35); },
   ring:      (a, o, t) => { for (let k = 0; k < 3; k++) clack(a, o, t + k * .16, {f:900, thump:140, g:.4}); hum(a, o, t + .5, 494, .16, .4); },
   boot:      (a, o, t) => { clack(a, o, t, {f:800, thump:120, g:.4}); },
 };
@@ -1289,7 +1309,7 @@ async function startDM(id){
       if (!entry.peerIds.has(pid)) return;
       if (d?.ack){ const o = dmData(id); o.outbox = o.outbox.filter(m => m.mid !== d.ack); const m = o.msgs.find(m => m.mid === d.ack); if (m) m.ok = 1; save(); dmChanged(id); return; }
       if (d?.ring){ if (currentRoom?.call !== id) showRing(id); return; }
-      if (d?.decline){ if (currentRoom?.call === id) sys(t('callDeclined', friendName(id))); return; }
+      if (d?.decline){ if (currentRoom?.call === id && room){ S.leftNote = t('callDeclined', friendName(id)); leaveVoice(); } return; }
       if (d?.hang){ if (ringFrom === id) hideRing(); if (currentRoom?.call === id && room){ sys(t('callEnded', friendName(id))); leaveVoice(); } return; }
       if ((typeof d?.t === 'string' || d?.inv) && d.mid){
         send({ack:d.mid}, pid).catch(() => {});
@@ -1426,7 +1446,7 @@ async function callRoomFor(id){
 async function startCall(id){
   const e = dms.get(id);
   if (!e?.online){ uiAlert(t('callOffline', friendName(id))); return; }
-  const r = await callRoomFor(id);
+  const r = {...await callRoomFor(id), dial:true};
   e.send({ring:1}, [...e.peerIds]).catch(() => {});
   switchVoice(r);
 }
@@ -1471,7 +1491,7 @@ function renderFriends(){
     const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.nick || c.name || '?';
     row.append(dot, nm);
     const un = S.dm?.[id]?.unread || 0, meta = document.createElement('span');
-    if (inCall){ Object.assign(meta, {className:'meta live vtag fold', textContent:t('callTag') + (S.peopleFold ? ' \u25b8' : ' \u25be'), title:t('peopleFoldTip'), onclick:ev => { ev.stopPropagation(); S.peopleFold = !S.peopleFold; save(); renderRooms(); renderFriends(); }}); row.firstChild.replaceWith(Object.assign(document.createElement('span'), {className:'ic live', innerHTML:SPK})); }
+    if (inCall){ Object.assign(meta, {className:'meta live vtag fold' + (isCalling() ? ' calling' : ''), textContent:t(isCalling() ? 'callingTag' : 'callTag') + (S.peopleFold ? ' \u25b8' : ' \u25be'), title:t('peopleFoldTip'), onclick:ev => { ev.stopPropagation(); S.peopleFold = !S.peopleFold; save(); renderRooms(); renderFriends(); }}); row.firstChild.replaceWith(Object.assign(document.createElement('span'), {className:'ic live', innerHTML:SPK})); }
     else if (un){ meta.className = 'meta unread'; meta.textContent = '(' + un + ')'; }
     else if (here(id)){ meta.className = 'meta live'; meta.textContent = t('hereShort'); }
     else { meta.className = 'meta'; meta.textContent = on(id) ? '' : ago(c.seen); }
@@ -1587,8 +1607,8 @@ setInterval(renderPresence, 3000); setTimeout(renderPresence, 300); addEventList
 function renderVoice(){
   const on = !!room;
   $('app').classList.toggle('noroom', !on);
-  $('voice').classList.toggle('on', on);
-  $('voiceTxt').textContent = !on ? '' : currentRoom?.call ? t('voiceCall', friendName(currentRoom.call)) : t('voiceRoom', currentRoom?.label || '', livePeers() + 1);
+  $('voice').classList.toggle('on', on); $('voice').classList.toggle('calling', on && isCalling());
+  $('voiceTxt').textContent = !on ? '' : currentRoom?.call ? t(isCalling() ? 'calling' : 'voiceCall', friendName(currentRoom.call)) : t('voiceRoom', currentRoom?.label || '', livePeers() + 1);
   $('voice').title = on ? t('voiceShow') : '';
   renderMic();
   $('meName').textContent = S.name; $('meAv').textContent = (S.name || '?').trim().charAt(0).toUpperCase() || '?';
@@ -1622,7 +1642,7 @@ async function switchVoice(r){
   if (!room) return enterRoom(r);
   if (currentRoom?.id === r.id) return r.call ? setView(r.call) : setView('room', r);
   if (!await uiConfirm(t('switchQ', currentRoom.call ? friendName(currentRoom.call) : currentRoom.label, r.call ? friendName(r.call) : r.label))) return;
-  S.autoJoin = {id:r.id, label:r.label, room:r.room, pass:r.pass, call:r.call || null}; keepView(); save();
+  S.autoJoin = {id:r.id, label:r.label, room:r.room, pass:r.pass, call:r.call || null, dial:!!r.dial}; keepView(); save();
   bye(); beep('disconnect'); setTimeout(() => location.reload(), 300);
 }
 function leaveVoice(){
@@ -1849,7 +1869,7 @@ function showQ(p){
   p.qEl.textContent = '';
   if (p.path){
     const tag = document.createElement('span'); tag.className = 'path ' + p.path;
-    tag.textContent = '[' + t('path_' + p.path) + ']'; tag.title = t('pathDesc_' + p.path);
+    tag.textContent = '[' + t('path_' + p.path) + (p.ipv6 && p.path !== 'relay' ? ' \u00b7 IPv6' : '') + ']'; tag.title = t('pathDesc_' + p.path);
     p.qEl.append(tag, ' ');
   }
   p.qEl.append(Math.round(rtt) + ' ms · ' + loss.toFixed(1) + '% ' + t('loss'));
@@ -1893,8 +1913,13 @@ setInterval(async () => {
       p.q = {rtt: rtt ?? rtt2, loss: dl + dr > 0 ? dl / (dl + dr) * 100 : 0};
       // Path of the active connection: relayed via TURN, direct over the internet, or inside the local network
       if (pair){
-        const lt = stats.get(pair.localCandidateId)?.candidateType, rt = stats.get(pair.remoteCandidateId)?.candidateType;
-        p.path = lt === 'relay' || rt === 'relay' ? 'relay' : lt === 'host' && rt === 'host' ? 'lan' : lt ? 'p2p' : p.path;
+        const lc = stats.get(pair.localCandidateId), rc = stats.get(pair.remoteCandidateId), lt = lc?.candidateType, rt = rc?.candidateType;
+        // "host" only means the device's own address. Over IPv6 (common on 5G) that is a public internet address,
+        // so it counts as LAN only when the remote address is private, link-local or an mDNS (.local) name.
+        const ip = String(rc?.address || rc?.ip || '').toLowerCase();
+        const privateAddr = /\.local$/.test(ip) || /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|127\.)/.test(ip) || /^f[cd][0-9a-f]{2}:/.test(ip) || /^fe[89ab][0-9a-f]:/.test(ip);
+        p.path = lt === 'relay' || rt === 'relay' ? 'relay' : lt === 'host' && rt === 'host' && privateAddr ? 'lan' : lt ? 'p2p' : p.path;
+        p.ipv6 = ip.includes(':');
         if (lt === 'relay') relayBytes[pair.id + '@' + id] = (pair.bytesSent || 0) + (pair.bytesReceived || 0);
       }
       showQ(p);
@@ -2244,6 +2269,7 @@ async function join(r, secret, ice){
     const text = String(d?.t || '').slice(0, 2000);
     const esc = S.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     if (d?.pm) return; // private messages were replaced by friend chats
+    if (typeof d?.hack === 'string'){ runHack(label(p), d.hack.slice(0, 24), Number(d.s) || 0); return; }
     const mention = (S.name.length > 1 && new RegExp('(^|[^\\p{L}\\p{N}])@?' + esc + '($|[^\\p{L}\\p{N}])', 'iu').test(text));
     const kind = (d?.me ? 'action ' : '') + (mention ? 'mention' : '');
     chat(label(p), text, kind);
@@ -2401,7 +2427,9 @@ function startApp(){
   setView('home');
   loadAccount().then(() => startAllDMs()).catch(e => console.warn('account', e));
   // a voice switch reloads the page and continues here; an invite link only opens the room
-  const auto = S.autoJoin, rv = S.resumeView; S.resumeView = null; save();
+  const auto = S.autoJoin, rv = S.resumeView; S.resumeView = null;
+  if (S.leftNote){ setTimeout(toast, 500, S.leftNote); S.leftNote = null; }
+  save();
   if (rv?.startsWith('room:')){ const r = S.rooms.find(x => x.id === rv.slice(5)); if (r) setView('room', r); }
   else if (rv && rv !== 'home' && S.contacts[rv]?.verified) setView(rv);
   if (auto){ S.autoJoin = null; save(); enterRoom(auto); }
@@ -2450,6 +2478,75 @@ function whoIs(arg){
   if (m.amb){ sys(t('ambiguous', m.amb.map(p => handle(p) + (S.contacts[p.acct]?.verified ? ' ✓' : '')).join(', '))); return null; }
   return m;
 }
+// Easter egg: a fake Hollywood hack, played the same way for everyone in the room (same seed)
+function hackLine(text, big){ const d = document.createElement('div'); d.className = 'line hack' + (big ? ' big' : ''); d.textContent = text; addLine(d); return d; }
+function runHack(by, target, seed){
+  let r = seed || 1; const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647;
+  const ip = [10 + Math.floor(rnd() * 200), Math.floor(rnd() * 255), Math.floor(rnd() * 255), Math.floor(rnd() * 255)].join('.');
+  const jokes = (LANG[S.lang]?.hackJokes ?? LANG.en.hackJokes).split('|'), joke = jokes[Math.floor(rnd() * jokes.length)].replace(/\{0\}/g, target);
+  const steps = [
+    [0, t('hackStart', by, target)],
+    [700, '> ' + t('hackFw') + ' ........ ok'],
+    [1400, '> ' + t('hackTrace') + ' ' + ip],
+    [2100, '> ' + t('hackRam') + ' ...... ok'],
+    [2700, 'bar'],
+    [5200, '> ' + t('hackPw') + ': ' + '*'.repeat(6 + Math.floor(rnd() * 6)) + ' ok'],
+    [6000, 'end'],
+  ];
+  for (const [ms, text] of steps) setTimeout(() => {
+    if (text === 'bar'){
+      const el = hackLine('> ' + t('hackDecrypt') + ' [..........]   0%'); let n = 0;
+      const iv = setInterval(() => { n = Math.min(10, n + 1 + (rnd() < .3 ? 1 : 0)); el.textContent = '> ' + t('hackDecrypt') + ' [' + '#'.repeat(n) + '.'.repeat(10 - n) + '] ' + String(n * 10).padStart(3) + '%'; if (n >= 10) clearInterval(iv); }, 220);
+    } else if (text === 'end'){ hackLine(t('hackDone') + ' ' + joke, true); beep('mention'); }
+    else { hackLine(text); beep('msg'); }
+  }, ms);
+}
+
+// Easter egg (PC): the Konami code (up up down down left right left right B A) lets green code rain fall for 10 s
+const KONAMI = ['arrowup','arrowup','arrowdown','arrowdown','arrowleft','arrowright','arrowleft','arrowright','b','a'];
+let konamiPos = 0;
+document.addEventListener('keydown', e => {
+  const k = (e.key || '').toLowerCase();
+  konamiPos = k === KONAMI[konamiPos] ? konamiPos + 1 : (k === KONAMI[0] ? 1 : 0);
+  if (konamiPos === KONAMI.length){ konamiPos = 0; matrixRain(); }
+});
+function matrixRain(){
+  if (document.getElementById('matrix')) return;
+  const c = document.createElement('canvas'); c.id = 'matrix'; document.body.append(c);
+  const g = c.getContext('2d'), dpr = devicePixelRatio || 1, fs = 16;
+  const size = () => { c.width = innerWidth * dpr; c.height = innerHeight * dpr; g.scale(dpr, dpr); };
+  size();
+  const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF<>/*+=';
+  const cols = Math.ceil(innerWidth / fs), y = Array.from({length:cols}, () => Math.random() * -40);
+  const col = getComputedStyle(document.documentElement).getPropertyValue('--voice').trim() || '#39ff6a';
+  beep('boot'); const t0 = performance.now(); let last = 0;
+  const frame = now => {
+    if (now - last > 45){
+      last = now;
+      g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(0, 0, innerWidth, innerHeight);
+      g.font = fs + 'px monospace';
+      for (let i = 0; i < cols; i++){
+        const ch = chars[Math.floor(Math.random() * chars.length)];
+        g.fillStyle = Math.random() < .08 ? '#d8ffe4' : col; g.fillText(ch, i * fs, y[i] * fs);
+        if (y[i] * fs > innerHeight && Math.random() > .975) y[i] = 0; else y[i]++;
+      }
+    }
+    if (now - t0 < 10000) requestAnimationFrame(frame);
+    else { c.style.opacity = '0'; setTimeout(() => c.remove(), 900); }
+  };
+  requestAnimationFrame(frame);
+}
+
+// Easter egg: click your own avatar 7 times quickly to unlock the CRT theme
+let avClicks = [];
+$('meAv').addEventListener('click', () => {
+  const now = Date.now(); avClicks = avClicks.filter(x => now - x < 4000); avClicks.push(now);
+  if (avClicks.length < 7) return;
+  avClicks = [];
+  const first = !S.crt; S.crt = true; S.theme = S.theme === 'crt' ? 'normal' : 'crt'; save(); applyLook();
+  toast(first ? t('crtUnlocked') : S.theme === 'crt' ? t('themeCrt') : t('themeNormal')); beep('connect');
+});
+
 function command(txt){
   const [c0, ...rest] = txt.slice(1).split(' '), cmd = c0.toLowerCase(), arg = rest.join(' ').trim();
   switch (cmd){
@@ -2457,6 +2554,11 @@ function command(txt){
     case 'nick': case 'name':
       if (!arg) return sys(t('usage', '/nick NAME'));
       setMyName(arg); break;
+    case 'hack':
+      if (!room || activeConv !== 'room') return sys(t('hackNoRoom'));
+      if (!arg) return sys(t('usage', '/hack NAME'));
+      { const seed = Math.floor(Math.random() * 1e6), target = arg.slice(0, 24); runHack(S.name, target, seed); broadcast({hack:target, s:seed}); }
+      break;
     case 'me':
       if (!arg) return sys(t('usage', '/me ACTION'));
       chat(S.name, arg, 'me action'); broadcast({t:arg, me:1}); break;
@@ -2491,7 +2593,7 @@ function command(txt){
       setMaster(v); sys(t('masterVol') + ': ' + S.master + '%'); break;
     }
     case 'theme':
-      if (!THEMES.includes(arg)) return sys(t('usage', '/theme ' + THEMES.join('|')));
+      if (!THEMES.includes(arg) || (arg === 'crt' && !S.crt)) return sys(t('usage', '/theme ' + THEMES.filter(x => x !== 'crt' || S.crt).join('|')));
       S.theme = arg; save(); applyLook(); break;
     case 'lock': setLock(arg === 'off' ? false : arg === 'on' ? true : !isLocked()); break;
     case 'sounds': case 'sound': S.sounds = !S.sounds; save(); sys(t(S.sounds ? 'soundsOn' : 'soundsOff')); break;
@@ -2604,7 +2706,31 @@ $('impFile').onchange = async () => {
 };
 $('closeSet').onclick = () => $('dlg').close();
 
-for (const k of ['ec','ns','agc']) $(k).onchange = async () => { S[k]=$(k).checked; save(); await tryMic(); };
+// Safety: leave voice by itself after 10 minutes with nobody else there (a forgotten tab keeps no live microphone)
+const ALONE_MIN = 10;
+let aloneSince = null, aloneWarned = false;
+setInterval(() => {
+  if (!room || livePeers() > 0){ aloneSince = null; aloneWarned = false; return; }
+  aloneSince ??= Date.now();
+  const mins = (Date.now() - aloneSince) / 60000;
+  if (mins >= ALONE_MIN - 1 && !aloneWarned){ aloneWarned = true; toast(t('aloneWarn')); sys(t('aloneWarn')); beep('drop'); }
+  if (mins >= ALONE_MIN){ S.leftNote = t('aloneLeft', currentRoom?.call ? friendName(currentRoom.call) : currentRoom?.label || '', ALONE_MIN); leaveVoice(); }
+}, 10000);
+let callAnswered = false, callStart = null, lastRing = 0, callTick = 0;
+const isCalling = () => !!room && !!currentRoom?.call && !!currentRoom.dial && !callAnswered;
+setInterval(() => {
+  const c = room && currentRoom?.call;
+  if (!c){ callAnswered = false; callStart = null; return; }
+  if (livePeers() > 0){ if (!callAnswered){ callAnswered = true; renderView(); renderFriends(); } return; }
+  if (!isCalling()) return;
+  callStart ??= Date.now();
+  const ms = Date.now() - callStart;
+  if (Date.now() - lastRing > 10000 && ms > 1500){ lastRing = Date.now(); dms.get(c)?.send?.({ring:1})?.catch?.(() => {}); }
+  if (callTick++ % 3 === 0) beep('ringback');
+  if (ms > 45000){ S.leftNote = t('noAnswer', friendName(c)); leaveVoice(); }
+}, 1000);
+const micInUse = () => !!(room || entering);   // the microphone is only ever opened while in voice
+for (const k of ['ec','ns','agc']) $(k).onchange = async () => { S[k]=$(k).checked; save(); if (micInUse()) await tryMic(); };
 for (const k of ['hp','gate']) $(k).onchange = () => { S[k]=$(k).checked; save(); applyGraph(); };
 $('gain').oninput = () => { S.gain=+$('gain').value; save(); syncSettingsUI(); applyGraph(); };
 $('minLen').oninput = () => { S.minLen=+$('minLen').value; save(); syncSettingsUI(); applyGraph(); };
@@ -2615,8 +2741,8 @@ $('boost').onchange = () => {
   if (!S.boost) for (const [, p] of peers){ p.vol = Math.min(p.vol, 100); applyPeerVol(p); }
   save(); renderPeers();
 };
-$('mic').onchange = async () => { S.mic=$('mic').value; save(); await tryMic(); };
-$('micRetry').onclick = () => tryMic();
+$('mic').onchange = async () => { S.mic=$('mic').value; save(); if (micInUse()) await tryMic(); };
+$('micRetry').onclick = () => { if (micInUse()) tryMic(); };
 </script>
 </body>
 </html>
